@@ -48,6 +48,12 @@ for bit in maskbits:
     mask_clean &= (cat['MASKBITS'] & 2**bit)==0
 print(np.sum(~mask_clean), np.sum(~mask_clean)/len(mask_clean))
 cat = cat[mask_clean]
+print(len(cat))
+
+mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+cat = cat[mask]
+print(len(cat))
+print()
 
 
 # Load randoms
