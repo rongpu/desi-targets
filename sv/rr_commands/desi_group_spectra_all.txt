@@ -1,0 +1,13 @@
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]0-*.fits --outfile $OUTDIR/70004/spectra-0-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]2-*.fits --outfile $OUTDIR/70004/spectra-2-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]3-*.fits --outfile $OUTDIR/70004/spectra-3-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]6-*.fits --outfile $OUTDIR/70004/spectra-6-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]7-*.fits --outfile $OUTDIR/70004/spectra-7-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050988/cframe-[brz]9-*.fits --outfile $OUTDIR/70004/spectra-9-70004-00050988.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]0-*.fits --outfile $OUTDIR/70004/spectra-0-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]2-*.fits --outfile $OUTDIR/70004/spectra-2-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]3-*.fits --outfile $OUTDIR/70004/spectra-3-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]6-*.fits --outfile $OUTDIR/70004/spectra-6-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]7-*.fits --outfile $OUTDIR/70004/spectra-7-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00050995/cframe-[brz]9-*.fits --outfile $OUTDIR/70004/spectra-9-70004-00050995.fits
+desi_group_spectra --inframes $INDIR/20200219/00051001/cframe-[brz]0-*.fits --outfile 
