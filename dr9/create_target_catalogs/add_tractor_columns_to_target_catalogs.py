@@ -1,6 +1,6 @@
 # Add tractor columns
 # Example:
-# python add_tractor_columns_to_target_catalogs.py sv1 LRG south
+# python add_tractor_columns_to_target_catalogs.py sv3 LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -12,14 +12,14 @@ from multiprocessing import Pool
 
 from desitarget.targets import decode_targetid, encode_targetid
 
-n_processess = 32
+n_processes = 32
 
-data_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.49.0'
+data_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0'
 
 # Add more columns from tractor catalogs
-tractor_columns = ['fitbits', 'nea_g', 'nea_r', 'nea_z', 'blob_nea_g', 'blob_nea_r', 'blob_nea_z']
+tractor_columns = ['nea_g', 'nea_r', 'nea_z', 'blob_nea_g', 'blob_nea_r', 'blob_nea_z']
 
-# program: "main" or "sv1"
+# program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
 program, target_class, field = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])
@@ -34,11 +34,11 @@ elif field=='north':
 
 print(program, target_class, field)
 
-cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_basic.fits'.format(program, target_class.lower(), field))
-more_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_more_0.fits'.format(program, target_class.lower(), field))
+cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_basic.fits'.format(program, target_class.lower(), field))
+output_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_more_0.fits'.format(program, target_class.lower(), field))
 
-if os.path.isfile(more_path):
-    sys.exit('File already exist: '+more_path)
+if os.path.isfile(output_path):
+    sys.exit('File already exist: '+output_path)
 
 cat_basic = Table(fitsio.read(cat_basic_path, columns=['TARGETID']))
 objid_all, brickid_all, release_all = decode_targetid(cat_basic['TARGETID'])[:3]
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # start multiple worker processes
-    with Pool(processes=n_processess) as pool:
+    with Pool(processes=n_processes) as pool:
         res = pool.map(get_tractor_columns, np.unique(brickid_all))
 
     # # Remove None elements from the list
@@ -92,6 +92,6 @@ if __name__ == '__main__':
         raise ValueError('different targetid')
     cat_more.remove_column('TARGETID')
 
-    cat_more.write(more_path)
+    cat_more.write(output_path)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

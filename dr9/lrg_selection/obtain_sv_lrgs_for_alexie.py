@@ -8,7 +8,7 @@ import fitsio
 import sys, os, glob, time, warnings, gc
 from multiprocessing import Pool
 
-n_processess = 32
+n_processes = 32
 field = 'south'
 output_path = '/global/cscratch1/sd/rongpu/share/dr9_lrg/dr9_sv_lrg_radec_only_{}.fits'.format(field)
 
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     sweep_fn_list = [os.path.basename(tmp) for tmp in sweep_all_path]
 
     # start multiple worker processes
-    with Pool(processes=n_processess) as pool:
+    with Pool(processes=n_processes) as pool:
         res = pool.map(get_lrgs, range(len(sweep_fn_list)))
 
     # Remove None elements from the list

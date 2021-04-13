@@ -1,6 +1,6 @@
 # Add sweep, photo-z and stellar mass columns
 # Example:
-# python add_sweep_columns_to_target_catalogs.py sv1 LRG south
+# python add_sweep_columns_to_target_catalogs.py sv3 LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -11,6 +11,7 @@ import fitsio
 from multiprocessing import Pool
 
 from desitarget.targets import decode_targetid, encode_targetid
+
 
 # Snippets taken from desitarget
 
@@ -43,14 +44,16 @@ def is_in_box(objs, radecbox, ra_col='RA', dec_col='DEC'):
     return ii
 
 
-n_processess = 32
+n_processes = 32
 
-ls_columns = ['GAIA_PHOT_G_MEAN_MAG', 'GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS']
+ls_columns = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
+              'FRACFLUX_G', 'FRACFLUX_R', 'FRACFLUX_Z', 'FRACFLUX_W1', 'FRACFLUX_W2', 'FRACMASKED_G', 'FRACMASKED_R',
+              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R']
 
-data_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.49.0'
+data_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0'
 stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
-# program: "main" or "sv1"
+# program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
 program, target_class, field = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])
@@ -60,11 +63,11 @@ field = field.lower()
 
 print(program, target_class, field)
 
-cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_basic.fits'.format(program, target_class.lower(), field))
-more_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_more_1.fits'.format(program, target_class.lower(), field))
+cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_basic.fits'.format(program, target_class.lower(), field))
+output_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_more_1.fits'.format(program, target_class.lower(), field))
 
-if os.path.isfile(more_path):
-    sys.exit('File already exist: '+more_path)
+if os.path.isfile(output_path):
+    sys.exit('File already exist: '+output_path)
 
 cat_basic = Table(fitsio.read(cat_basic_path, columns=['RA', 'DEC', 'TARGETID']))
 
@@ -109,7 +112,7 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # start multiple worker processes
-    with Pool(processes=n_processess) as pool:
+    with Pool(processes=n_processes) as pool:
         res = pool.map(get_sweep_columns, np.unique(sweep_fn_list))
 
     # Remove None elements from the list
@@ -129,6 +132,6 @@ if __name__ == '__main__':
         raise ValueError('different targetid')
     cat_more.remove_column('TARGETID')
 
-    cat_more.write(more_path)
+    cat_more.write(output_path)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

@@ -1,5 +1,5 @@
 # Example:
-# python create_per_tracer_catalogs.py sv1 LRG south
+# python create_per_tracer_catalogs.py sv3 LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -11,17 +11,17 @@ min_nobs = 1
 maskbits_dark = [1, 12, 13]  # Default maskbits for LRG/ELG/QSO ["BRIGHT", "GALAXY", "CLUSTER"]
 maskbits_bgs = [1, 13]  # Default maskbits for bgs ["BRIGHT", "CLUSTER"]
 
-target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/targets'
-output_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.49.0'
+target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.57.0/targets'
+output_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0'
 
 basic_columns_main = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'DESI_TARGET', 'BGS_TARGET']
-basic_columns_sv1 = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'SV1_DESI_TARGET', 'SV1_BGS_TARGET']
+basic_columns_sv3 = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'SV3_DESI_TARGET', 'SV3_BGS_TARGET']
 photom_columns = ['MORPHTYPE', 'EBV', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_IVAR_G', 'FLUX_IVAR_R', 'FLUX_IVAR_Z',
                   'MW_TRANSMISSION_G', 'MW_TRANSMISSION_R', 'MW_TRANSMISSION_Z', 'FLUX_W1', 'FLUX_W2',
                   'FLUX_IVAR_W1', 'FLUX_IVAR_W2', 'MW_TRANSMISSION_W1', 'MW_TRANSMISSION_W2',
-                  'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'SHAPE_R', 'SERSIC']
+                  'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'SHAPE_R', 'SERSIC', 'FIBERTOTFLUX_Z', 'GAIA_PHOT_G_MEAN_MAG']
 
-# program: "main" or "sv1"
+# program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
 program, target_class, field = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])
@@ -29,7 +29,7 @@ program = program.lower()
 target_class = target_class.upper()
 field = field.lower()
 
-# The following target bits are the same in both main and SV1
+# The following target bits are the same in both main and SV3
 target_bits = {'LRG': 0, 'ELG': 1, 'QSO': 2, 'BGS_ANY': 60}
 target_bit = target_bits[target_class]
 
@@ -46,8 +46,8 @@ print(program, target_class, field)
 
 if program=='main':
     basic_columns = basic_columns_main
-elif program=='sv1':
-    basic_columns = basic_columns_sv1
+elif program=='sv3':
+    basic_columns = basic_columns_sv3
 
 if target_class=='BGS_ANY':
     target_path_list = glob.glob(os.path.join(target_dir, program, 'resolve', 'bright', '*.fits'))
@@ -56,8 +56,8 @@ else:
     target_path_list = glob.glob(os.path.join(target_dir, program, 'resolve', 'dark', '*.fits'))
     maskbits = maskbits_dark
 
-cat_basic_path = os.path.join(output_dir, 'dr9_{}_{}_{}_0.49.0_basic.fits'.format(program, target_class.lower(), field))
-cat_photom_path = os.path.join(output_dir, 'dr9_{}_{}_{}_0.49.0_photom.fits'.format(program, target_class.lower(), field))
+cat_basic_path = os.path.join(output_dir, 'dr9_{}_{}_{}_0.57.0_basic.fits'.format(program, target_class.lower(), field))
+cat_photom_path = os.path.join(output_dir, 'dr9_{}_{}_{}_0.57.0_photom.fits'.format(program, target_class.lower(), field))
 
 if os.path.isfile(cat_basic_path):
     sys.exit('File already exist: '+cat_basic_path)
@@ -73,9 +73,9 @@ for index, target_path in enumerate(target_path_list):
     if program=='main':
         tmp = fitsio.read(target_path, columns=['DESI_TARGET', 'PHOTSYS'])
         mask = ((tmp["DESI_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
-    elif program=='sv1':
-        tmp = fitsio.read(target_path, columns=['SV1_DESI_TARGET', 'PHOTSYS'])
-        mask = ((tmp["SV1_DESI_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
+    elif program=='sv3':
+        tmp = fitsio.read(target_path, columns=['SV3_DESI_TARGET', 'PHOTSYS'])
+        mask = ((tmp["SV3_DESI_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
     idx = np.where(mask)[0]
     if len(idx)==0:
         continue
