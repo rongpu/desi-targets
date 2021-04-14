@@ -1,0 +1,5 @@
+srun -N 1 -n 32 -c 2 -t 00:10:00 rrdesi_mpi $OUTDIR/80688/spectra-6-80688-00071890.fits -o $OUTDIR/80688/redrock-6-80688-00071890.h5 -z $OUTDIR/80688/zbest-6-80688-00071890.fits &> $OUTDIR/80688/redrock-6-80688-00071890.log
+srun -N 1 -n 32 -c 2 -t 00:10:00 rrdesi_mpi $OUTDIR/80699/spectra-9-80699-00071898.fits -o $OUTDIR/80699/redrock-9-80699-00071898.h5 -z $OUTDIR/80699/zbest-9-80699-00071898.fits &> $OUTDIR/80699/redrock-9-80699-00071898.log
+srun -N 1 -n 32 -c 2 -t 00:10:00 rrdesi_mpi $OUTDIR/80660/spectra-5-80660-00072529.fits -o $OUTDIR/80660/redrock-5-80660-00072529.h5 -z $OUTDIR/80660/zbest-5-80660-00072529.fits &> $OUTDIR/80660/redrock-5-80660-00072529.log
+srun -N 1 -n 32 -c 2 -t 00:10:00 rrdesi_mpi $OUTDIR/80688/spectra-6-80688-00072690.fits -o $OUTDIR/80688/redrock-6-80688-00072690.h5 -z $OUTDIR/80688/zbest-6-80688-00072690.fits &> $OUTDIR/80688/redrock-6-80688-00072690.log
+srun -N 1 -n 32 -c 2 -t 00:10:00 rrdesi_mpi $OUTDIR/80718/spectra-0-80718-00073728.fits -o $OUTDIR/80718/redrock-0-80718-00073728.h5 -z $OUTDIR/80718/zbest-0-80718-00073728.fits &> $OUTDIR/80718/redrock-0-80718-00073728.log
