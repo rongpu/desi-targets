@@ -1,0 +1,168 @@
+from __future__ import division, print_function
+import sys, os, glob, time, warnings, gc
+import numpy as np
+from astropy.table import Table, vstack, hstack
+import fitsio
+
+from multiprocessing import Pool
+import healpy as hp
+
+field = str(sys.argv[1])
+field = field.lower()
+
+min_nobs = 2
+maskbits = sorted([1, 8, 9, 11, 12, 13])
+
+n_randoms_catalogs = 2
+
+n_processes = 32
+
+nsides = [64, 128, 256]
+
+randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
+                   'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z',
+                   'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
+                   'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
+
+randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/noresolve/{}/*.fits'.format(field)))
+randoms_paths = randoms_paths[:n_randoms_catalogs]
+
+randoms_density = 2500
+
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/randoms_stats/0.49.0/systematics'
+
+hp_columns = ['EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
+
+
+def apply_mask(randoms, min_nobs, maskbits):
+
+    mask = (randoms['NOBS_G']>=min_nobs) & (randoms['NOBS_R']>=min_nobs) & (randoms['NOBS_Z']>=min_nobs)
+
+    mask_clean = np.ones(len(randoms), dtype=bool)
+    for bit in maskbits:
+        mask_clean &= (randoms['MASKBITS'] & 2**bit)==0
+    # print(np.sum(~mask_clean)/len(mask_clean))
+
+    mask &= mask_clean
+
+    return mask
+
+
+def get_systeamtics(pix_list):
+
+    hp_table = Table()
+    hp_table['hp_idx'] = pix_list
+    hp_table['ra'], hp_table['dec'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
+
+    arr = np.zeros([len(pix_list), len(hp_columns)])
+    hp_table = hstack([hp_table, Table(arr, names=hp_columns)])
+
+    # Use mean for NOBS; median for other properties
+    for index in range(len(pix_list)):
+
+        mask = pix_allobj==pix_list[index]
+
+        hp_table['EBV'][index] = np.median(randoms['EBV'][mask])
+
+        hp_table['galdepth_gmag'][index] = np.median(randoms['galdepth_gmag'][mask])
+        hp_table['galdepth_rmag'][index] = np.median(randoms['galdepth_rmag'][mask])
+        hp_table['galdepth_zmag'][index] = np.median(randoms['galdepth_zmag'][mask])
+        hp_table['psfdepth_gmag'][index] = np.median(randoms['psfdepth_gmag'][mask])
+        hp_table['psfdepth_rmag'][index] = np.median(randoms['psfdepth_rmag'][mask])
+        hp_table['psfdepth_zmag'][index] = np.median(randoms['psfdepth_zmag'][mask])
+        hp_table['psfdepth_w1mag'][index] = np.median(randoms['psfdepth_w1mag'][mask])
+        hp_table['psfdepth_w2mag'][index] = np.median(randoms['psfdepth_w2mag'][mask])
+
+        hp_table['galdepth_gmag_ebv'][index] = np.median(randoms['galdepth_gmag_ebv'][mask])
+        hp_table['galdepth_rmag_ebv'][index] = np.median(randoms['galdepth_rmag_ebv'][mask])
+        hp_table['galdepth_zmag_ebv'][index] = np.median(randoms['galdepth_zmag_ebv'][mask])
+        hp_table['psfdepth_gmag_ebv'][index] = np.median(randoms['psfdepth_gmag_ebv'][mask])
+        hp_table['psfdepth_rmag_ebv'][index] = np.median(randoms['psfdepth_rmag_ebv'][mask])
+        hp_table['psfdepth_zmag_ebv'][index] = np.median(randoms['psfdepth_zmag_ebv'][mask])
+        hp_table['psfdepth_w1mag_ebv'][index] = np.median(randoms['psfdepth_w1mag_ebv'][mask])
+        hp_table['psfdepth_w2mag_ebv'][index] = np.median(randoms['psfdepth_w2mag_ebv'][mask])
+
+        hp_table['PSFSIZE_G'][index] = np.median(randoms['PSFSIZE_G'][mask])
+        hp_table['PSFSIZE_R'][index] = np.median(randoms['PSFSIZE_R'][mask])
+        hp_table['PSFSIZE_Z'][index] = np.median(randoms['PSFSIZE_Z'][mask])
+
+        hp_table['NOBS_G'][index] = np.mean(randoms['NOBS_G'][mask])
+        hp_table['NOBS_R'][index] = np.mean(randoms['NOBS_R'][mask])
+        hp_table['NOBS_Z'][index] = np.mean(randoms['NOBS_Z'][mask])
+
+    return hp_table
+
+
+if __name__ == '__main__':
+
+    print('Start!')
+
+    time_start = time.time()
+
+    randoms_stack = []
+
+    for randoms_path in randoms_paths:
+
+        # print(randoms_path)
+        # randoms_index_str = os.path.basename(randoms_path).replace('randoms-noresolve-', '').replace('.fits', '')
+
+        randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
+        # print(len(randoms))
+
+        if fitsio.read_header(randoms_path, ext=1)['DENSITY']!=randoms_density:
+            raise ValueError
+
+        mask = apply_mask(randoms, min_nobs, maskbits)
+        randoms = randoms[mask]
+
+        randoms_stack.append(randoms)
+
+    randoms = vstack(randoms_stack)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        randoms['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9)
+        randoms['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9)
+        randoms['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9)
+        randoms['psfdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9)
+        randoms['psfdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9)
+        randoms['psfdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9)
+        randoms['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9)
+        randoms['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9)
+        randoms['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9) - 3.214*randoms['EBV']
+        randoms['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9) - 2.165*randoms['EBV']
+        randoms['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9) - 1.211*randoms['EBV']
+        randoms['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9) - 3.214*randoms['EBV']
+        randoms['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9) - 2.165*randoms['EBV']
+        randoms['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9) - 1.211*randoms['EBV']
+        randoms['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9) - 0.184*randoms['EBV']
+        randoms['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9) - 0.113*randoms['EBV']
+
+    print('Loading complete!')
+
+    for nside in nsides:
+
+        npix = hp.nside2npix(nside)
+
+        pix_allobj = hp.pixelfunc.ang2pix(nside, randoms['RA'], randoms['DEC'], lonlat=True)
+        pix_unique = np.unique(pix_allobj)
+
+        # shuffle
+        np.random.seed(123)
+        # DO NOT USE NP.RANDOM.SHUFFLE
+        pix_unique = np.random.choice(pix_unique, size=len(pix_unique), replace=False)
+
+        # split among the Cori nodes
+        pix_unique_split = np.array_split(pix_unique, n_processes)
+
+        # start multiple worker processes
+        with Pool(processes=n_processes) as pool:
+            res = pool.map(get_systeamtics, pix_unique_split)
+
+        hp_table = vstack(res)
+        hp_table.sort('hp_idx')
+
+        hp_table.write(os.path.join(output_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+
+    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+
