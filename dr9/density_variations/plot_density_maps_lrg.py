@@ -16,7 +16,7 @@ params = {'legend.fontsize': 'x-large',
           'figure.facecolor': 'w'}
 plt.rcParams.update(params)
 
-plt.rcParams['image.cmap'] = 'seismic'
+plt.rcParams['image.cmap'] = 'jet'
 
 min_nobs = 2
 maskbits = sorted([1, 8, 9, 11, 12, 13])
@@ -31,7 +31,7 @@ target_name = 'sv3_lrg_all'
 # target_name = 'sv3_lrg_lowdens'
 
 dpi_dict = {64: 200, 128: 200, 256: 600}
-vrange_dict = {64: [0, 1600], 128: [-200, 1800], 256: [-600, 2200]}
+vrange_dict = {64: [500, 1100], 128: [400, 1200], 256: [200, 1400]}
 # vrange_dict = {64: [0, 1200], 128: [-200, 1400], 256: [-600, 1800]}
 
 min_pix_frac = 0.2  # minimum fraction of pixel area to be used
@@ -109,8 +109,8 @@ for nside in [64, 128, 256]:
 
         plot_path = os.path.join(plot_dir, 'density_{}_{}.png'.format(target_name, nside))
 
-        if os.path.isfile(plot_path):
-            continue
+        # if os.path.isfile(plot_path):
+        #     continue
 
         map_values = np.zeros(npix)
         hp_mask = np.zeros(npix, dtype=bool)

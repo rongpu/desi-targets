@@ -27,7 +27,7 @@ target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/unoffici
 
 top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/systematics_maps'
 
-dpi_dict = {64: 200, 128: 200, 256: 600}
+dpi_dict = {64: 200, 128: 300, 256: 600}
 
 min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 
