@@ -1,6 +1,6 @@
 # Add sweep, photo-z and stellar mass columns
 # Example:
-# python add_sweep_columns_to_target_catalogs.py sv3 LRG south
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python add_pz_and_stellar_mass.py sv3 LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -89,6 +89,7 @@ def get_sweep_columns(sweep_fn):
     targetid = targetid[idx]
     pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz.fits')
     cat = Table(fitsio.read(pz_fn, rows=idx))
+    cat['TARGETID'] = targetid
     cat.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
 
     # Add stellar mass
