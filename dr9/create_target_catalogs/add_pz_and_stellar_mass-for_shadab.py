@@ -45,8 +45,8 @@ def is_in_box(objs, radecbox, ra_col='RA', dec_col='DEC'):
 
 n_processes = 32
 
-input_dir = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/LSScats/Target4Ang/dr9v0.57.0/sv3/'
-output_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0/sv3_shadab/'
+input_dir = '/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/LSScats/Target4Ang/dr9v0.57.0/sv3_v1/'
+output_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0/sv3_v1_shadab/'
 stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
 # filelist = glob.glob('/global/cfs/cdirs/desi/survey/catalogs/SV3/LSS/LSScats/Target4Ang/dr9v0.57.0/sv3/sv3target_*.fits')
