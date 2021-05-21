@@ -17,7 +17,10 @@ from astropy.coordinates import SkyCoord
 galactic_b_limit_pos, galactic_b_limit_neg = 14., -20.
 
 gaia_dir = '/project/projectdirs/cosmo/data/gaia/dr2/healpix'
-output_path = '/global/cscratch1/sd/rongpu/dr9_tests/misc/gaia_catalog_g_18.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18.fits'
+
+# gaia_dir = '/project/projectdirs/cosmo/data/gaia/edr3/healpix'
+# output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18.fits'
 
 gaia_nside = 32
 print('Healpix pixel size (square deg): {:.5f}'.format(hp.nside2pixarea(gaia_nside, degrees=True)))
@@ -33,12 +36,13 @@ gaia_list = np.where(mask)[0]
 print(len(gaia_list))
 
 gaia = []
-for index, hp_idx in enumerate(gaia_list):
-    gaia_fn = (5-len(str(hp_idx)))*'0'+str(hp_idx)
+for index, hp_index in enumerate(gaia_list):
+    gaia_fn = str(hp_index).zill(5)
     if index%100==0:
         print('{}/{}, {}'.format(index, len(gaia_list), gaia_fn))
-    tmp = Table(fitsio.read(os.path.join(gaia_dir, 'healpix-{}.fits'.format(gaia_fn)), columns=['RA', 'DEC', 'PHOT_G_MEAN_MAG']))
+    tmp = Table(fitsio.read(os.path.join(gaia_dir, 'healpix-{}.fits'.format(gaia_fn)), columns=['SOURCE_ID', 'RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_BP_MEAN_MAG', 'PHOT_RP_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR']))
     mask = tmp['PHOT_G_MEAN_MAG']<18.0
+    mask &= tmp['PHOT_G_MEAN_FLUX_OVER_ERROR']>0
     mask &= (tmp['DEC']>-32)
     if np.sum(mask)>0:
         c = SkyCoord(tmp['RA'], tmp['DEC'], unit='deg').galactic
