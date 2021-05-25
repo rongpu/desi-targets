@@ -7,11 +7,22 @@ import fitsio
 from multiprocessing import Pool
 import healpy as hp
 
+
+# resolve = 'noresolve'
+resolve = 'resolve'
+
 field = str(sys.argv[1])
 field = field.lower()
 
-min_nobs = 2
-maskbits = sorted([1, 8, 9, 11, 12, 13])
+if field=='south':
+    photsys = 'S'
+elif field=='north':
+    photsys = 'N'
+
+min_nobs = 1
+# maskbits = sorted([1, 13])
+# maskbits = sorted([1, 8, 9, 11, 12, 13])
+maskbits = sorted([1, 11, 12, 13])
 
 n_randoms_catalogs = 2
 
@@ -24,12 +35,15 @@ randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTS
                    'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
                    'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
 
-randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/noresolve/{}/*.fits'.format(field)))
+if resolve=='resolve':
+    randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
+elif resolve=='noresolve':
+    randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/noresolve/{}/randoms-noresolve-*.fits'.format(field)))
 randoms_paths = randoms_paths[:n_randoms_catalogs]
 
 randoms_density = 2500
 
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/randoms_stats/0.49.0/systematics'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/imaging_sys/randoms_stats/0.49.0/{}/systematics'.format(resolve)
 
 hp_columns = ['EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
 
@@ -104,13 +118,17 @@ if __name__ == '__main__':
     for randoms_path in randoms_paths:
 
         # print(randoms_path)
-        # randoms_index_str = os.path.basename(randoms_path).replace('randoms-noresolve-', '').replace('.fits', '')
+        # randoms_index_str = os.path.basename(randoms_path).replace('randoms-{}-'.format(resolve), '').replace('.fits', '')
 
         randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
         # print(len(randoms))
 
         if fitsio.read_header(randoms_path, ext=1)['DENSITY']!=randoms_density:
             raise ValueError
+
+        if resolve=='resolve':
+            mask = randoms['PHOTSYS']==photsys
+            randoms = randoms[mask]
 
         mask = apply_mask(randoms, min_nobs, maskbits)
         randoms = randoms[mask]
@@ -152,7 +170,7 @@ if __name__ == '__main__':
         # DO NOT USE NP.RANDOM.SHUFFLE
         pix_unique = np.random.choice(pix_unique, size=len(pix_unique), replace=False)
 
-        # split among the Cori nodes
+        # split among the Cori processors
         pix_unique_split = np.array_split(pix_unique, n_processes)
 
         # start multiple worker processes
@@ -165,4 +183,3 @@ if __name__ == '__main__':
         hp_table.write(os.path.join(output_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
-

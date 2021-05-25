@@ -20,7 +20,7 @@ lrg_mask &= (~mask_bright)
 
 lrg_mask &= (zfibertotmag>17.5)
 
-lrg_new_south = lrg_mask.copy()
+lrg_final_south = lrg_mask.copy()
 
 # North
 lrg_mask = mask_north.copy()
@@ -41,7 +41,7 @@ lrg_mask &= (~mask_bright)
 
 lrg_mask &= (zfibertotmag>17.5)
 
-lrg_new_north = lrg_mask.copy()
+lrg_final_north = lrg_mask.copy()
 
-lrg_new = lrg_new_south | lrg_new_north
-print(np.sum(lrg_new))
+lrg_final = lrg_final_south | lrg_final_north
+print(np.sum(lrg_final))
