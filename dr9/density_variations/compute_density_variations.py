@@ -15,8 +15,6 @@ target_class, field = str(sys.argv[1]), str(sys.argv[2])
 target_class = target_class.upper()
 field = field.lower()
 
-n_processes = 32
-
 min_nobs = 1
 
 target_bits = {'LRG': 0, 'ELG': 1, 'QSO': 2, 'BGS_ANY': 60, 'BGS_BRIGHT': 1}
