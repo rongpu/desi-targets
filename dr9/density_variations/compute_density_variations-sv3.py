@@ -1,5 +1,5 @@
 # Example:
-# python compute_density_variations.py LRG south
+# python compute_density_variations-sv3.py LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -25,11 +25,11 @@ nsides = [64, 128, 256, 512]
 target_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS']
 
 if 'BGS' in target_class:
-    target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/1.0.0/targets/main/resolve/bright'
+    target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.57.0/targets/sv3/resolve/bright'
 else:
-    target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/1.0.0/targets/main/resolve/dark'
+    target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.57.0/targets/sv3/resolve/dark'
 
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/1.0.0/resolve'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/0.57.0/resolve'
 
 target_bit = target_bits[target_class]
 maskbits = maskbits_dict[target_class]
@@ -80,16 +80,16 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # Load targets
-    target_path_list = glob.glob(os.path.join(target_dir, 'targets-*.fits'))
+    target_path_list = glob.glob(os.path.join(target_dir, 'sv3targets-*.fits'))
     cat = []
     for target_path in target_path_list:
         # print(target_path)
         if target_class!='BGS_BRIGHT':
-            tmp = fitsio.read(target_path, columns=['DESI_TARGET', 'PHOTSYS'])
-            mask = ((tmp["DESI_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
+            tmp = fitsio.read(target_path, columns=['SV3_DESI_TARGET', 'PHOTSYS'])
+            mask = ((tmp["SV3_DESI_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
         else:
-            tmp = fitsio.read(target_path, columns=['BGS_TARGET', 'PHOTSYS'])
-            mask = ((tmp["BGS_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
+            tmp = fitsio.read(target_path, columns=['SV3_BGS_TARGET', 'PHOTSYS'])
+            mask = ((tmp["SV3_BGS_TARGET"] & (2**target_bit))!=0) & (tmp['PHOTSYS']==photsys)
         idx = np.where(mask)[0]
         if len(idx)==0:
             continue
@@ -108,6 +108,6 @@ if __name__ == '__main__':
         pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
         hp_table = get_systeamtics(pix_unique)
         hp_table['n_targets'] = pix_count
-        hp_table.write(os.path.join(output_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        hp_table.write(os.path.join(output_dir, 'density_map_sv3_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

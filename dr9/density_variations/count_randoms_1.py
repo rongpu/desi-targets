@@ -22,9 +22,9 @@ elif field=='north':
     photsys = 'N'
 
 min_nobs = 1
-# maskbits = sorted([1, 13])
+maskbits = sorted([1, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
-maskbits = sorted([1, 11, 12, 13])
+# maskbits = sorted([1, 11, 12, 13])
 
 n_processes = 32
 
@@ -112,12 +112,12 @@ if __name__ == '__main__':
 
     time_start = time.time()
 
-    # start multiple worker processes
-    with Pool(processes=n_processes) as pool:
-        pool.map(count_randoms, randoms_paths)
+    # # start multiple worker processes
+    # with Pool(processes=n_processes) as pool:
+    #     pool.map(count_randoms, randoms_paths)
 
-    # for randoms_path in randoms_paths:
-    #     count_randoms(randoms_path)
+    for randoms_path in randoms_paths:
+        count_randoms(randoms_path)
 
     # Combine the results into a single table
 
@@ -145,4 +145,4 @@ if __name__ == '__main__':
 
         hp_table.write((os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))))
 
-    print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

@@ -21,7 +21,7 @@ target_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'NOBS_W
 
 target_path = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/unofficial/sv3_lrg_{}.fits'.format(field)
 
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/unofficial/density_maps'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/unofficial'
 
 # hp_columns = ['NOBS_W1', 'NOBS_W2']
 hp_columns = ['NOBS_W1']
@@ -44,8 +44,8 @@ def apply_mask(cat, min_nobs, maskbits):
 def get_systeamtics(pix_list):
 
     hp_table = Table()
-    hp_table['hp_idx'] = pix_list
-    hp_table['ra'], hp_table['dec'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
+    hp_table['HPXPIXEL'] = pix_list
+    hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
 
     arr = np.zeros([len(pix_list), len(hp_columns)])
     hp_table = hstack([hp_table, Table(arr, names=hp_columns)])
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         pix_allobj = hp.pixelfunc.ang2pix(nside, cat['RA'], cat['DEC'], lonlat=True)
         pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
         hp_table = get_systeamtics(pix_unique)
-        hp_table['count'] = pix_count
+        hp_table['n_targets'] = pix_count
         hp_table.write(os.path.join(output_dir, 'density_map_sv3_lrg_all_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 
     # 600 targets/sq.deg. selection
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         pix_allobj = hp.pixelfunc.ang2pix(nside, cat['RA'], cat['DEC'], lonlat=True)
         pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
         hp_table = get_systeamtics(pix_unique)
-        hp_table['count'] = pix_count
+        hp_table['n_targets'] = pix_count
         hp_table.write(os.path.join(output_dir, 'density_map_sv3_lrg_lowdens_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

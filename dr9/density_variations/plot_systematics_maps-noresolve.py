@@ -25,7 +25,7 @@ randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sy
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/noresolve/systematics'
 # target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/unofficial/density_maps'
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/systematics_maps/noresolve'
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/systematics_maps/0.49.0/noresolve'
 
 dpi_dict = {64: 200, 128: 300, 256: 600}
 

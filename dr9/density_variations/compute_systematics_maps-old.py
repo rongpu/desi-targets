@@ -1,4 +1,4 @@
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_systematics_maps.py south
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python compute_systematics_maps.py south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -22,11 +22,11 @@ elif field=='north':
     photsys = 'N'
 
 min_nobs = 1
-maskbits = sorted([1, 13])
+# maskbits = sorted([1, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
-# maskbits = sorted([1, 11, 12, 13])
+maskbits = sorted([1, 11, 12, 13])
 
-n_randoms_catalogs = 4
+n_randoms_catalogs = 2
 
 n_processes = 32
 
@@ -65,9 +65,7 @@ def apply_mask(randoms, min_nobs, maskbits):
     return mask
 
 
-def get_systeamtics(pix_idx):
-
-    pix_list = pix_unique[pix_idx]
+def get_systeamtics(pix_list):
 
     hp_table = Table()
     hp_table['hp_idx'] = pix_list
@@ -76,15 +74,16 @@ def get_systeamtics(pix_idx):
     arr = np.zeros([len(pix_list), len(hp_columns)])
     hp_table = hstack([hp_table, Table(arr, names=hp_columns)])
 
-    for index in np.arange(len(pix_idx)):
+    # Use mean for all quantities
+    for index in range(len(pix_list)):
 
-        idx = pixorder[pixcnts[pix_idx[index]]:pixcnts[pix_idx[index]+1]]
+        mask = pix_allobj==pix_list[index]
 
         for hp_column in hp_columns:
-            if 'NOBS_' in hp_column:
-                hp_table[hp_column][index] = np.mean(randoms[hp_column][idx])
+            if 'NOBS' in hp_column:
+                hp_table[hp_column][index] = np.mean(randoms[hp_column][mask])
             else:
-                hp_table[hp_column][index] = np.median(randoms[hp_column][idx])
+                hp_table[hp_column][index] = np.median(randoms[hp_column][mask])
 
     return hp_table
 
@@ -145,19 +144,19 @@ if __name__ == '__main__':
         npix = hp.nside2npix(nside)
 
         pix_allobj = hp.pixelfunc.ang2pix(nside, randoms['RA'], randoms['DEC'], lonlat=True)
-        pix_unique, pixcnts = np.unique(pix_allobj, return_counts=True)
+        pix_unique = np.unique(pix_allobj)
 
-        pixcnts = np.insert(pixcnts, 0, 0)
-        pixcnts = np.cumsum(pixcnts)
-
-        pixorder = np.argsort(pix_allobj)
+        # shuffle
+        np.random.seed(123)
+        # DO NOT USE NP.RANDOM.SHUFFLE
+        pix_unique = np.random.choice(pix_unique, size=len(pix_unique), replace=False)
 
         # split among the Cori processors
-        pix_idx_split = np.array_split(np.arange(len(pix_unique)), n_processes)
+        pix_unique_split = np.array_split(pix_unique, n_processes)
 
         # start multiple worker processes
         with Pool(processes=n_processes) as pool:
-            res = pool.map(get_systeamtics, pix_idx_split)
+            res = pool.map(get_systeamtics, pix_unique_split)
 
         hp_table = vstack(res)
         hp_table.sort('hp_idx')

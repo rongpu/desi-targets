@@ -18,7 +18,7 @@ plt.rcParams.update(params)
 
 plt.rcParams['image.cmap'] = 'jet'
 
-target_ver_str = '1.0.0'
+target_ver_str = '0.57.0'
 
 min_nobs = 1
 maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
@@ -31,11 +31,11 @@ top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/density_ma
 
 dpi_dict = {64: 200, 128: 200, 256: 600, 512: 1600}
 xsize_dict = {64: 8000, 128: 8000, 256: 12000, 512: 16000}
-vrange_dict = {'BGS_ANY': {64: [800, 2000], 128: [650, 2150], 256: [400, 2400], 512: [0, 2800]},
-               'BGS_BRIGHT': {64: [500, 1200], 128: [350, 1350], 256: [200, 1500], 512: [-200, 1800]},
-               'LRG': {64: [300, 900], 128: [200, 1000], 256: [100, 1100], 512: [-100, 1300]},
-               'ELG': {64: [1200, 3600], 128: [1200, 3600], 256: [1200, 3600], 512: [800, 4000]},
-               'QSO': {64: [150, 450], 128: [150, 450], 256: [100, 500], 512: [0, 600]},
+vrange_dict = {'SV3_BGS_ANY': {64: [800, 2000], 128: [650, 2150], 256: [400, 2400], 512: [0, 2800]},
+               'SV3_BGS_BRIGHT': {64: [500, 1200], 128: [350, 1350], 256: [200, 1500], 512: [-200, 1800]},
+               'SV3_LRG': {64: [500, 1100], 128: [400, 1200], 256: [300, 1300], 512: [100, 1500]},
+               'SV3_ELG': {64: [1200, 3600], 128: [1200, 3600], 256: [1200, 3600], 512: [800, 4000]},
+               'SV3_QSO': {64: [150, 450], 128: [150, 450], 256: [100, 500], 512: [0, 600]},
                }
 # vrange_dict = {64: [0, 1200], 128: [-200, 1400], 256: [-600, 1800]}
 
@@ -45,7 +45,7 @@ min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 #     print(xnames[index], xlabels[index])
 
 
-for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
+for target_class in ['SV3_BGS_ANY', 'SV3_BGS_BRIGHT', 'SV3_LRG', 'SV3_ELG', 'SV3_QSO']:
 
     print(target_class)
     target_class = target_class.lower()
@@ -74,10 +74,16 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
 
         maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
         maps = maps[maps['count']>0]
+        # maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        # maps1.remove_columns(['ra', 'dec'])
+        # maps = join(maps, maps1, join_type='inner', keys='hp_idx')
         maps_north = maps.copy()
 
         maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
         maps = maps[maps['count']>0]
+        # maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        # maps1.remove_columns(['ra', 'dec'])
+        # maps = join(maps, maps1, join_type='inner', keys='hp_idx')
         maps_south = maps.copy()
 
         mask = (maps_north['dec']>32.375)
