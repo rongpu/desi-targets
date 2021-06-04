@@ -1,6 +1,6 @@
 # Add sweep, photo-z and stellar mass columns
 # Example:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python add_pz_and_stellar_mass.py sv3 LRG south
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python add_pz_and_stellar_mass.py LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -49,15 +49,13 @@ n_processes = 32
 data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
 stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
-# program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
-program, target_class, field = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])
-program = program.lower()
+target_class, field = str(sys.argv[1]), str(sys.argv[2])
 target_class = target_class.upper()
 field = field.lower()
 
-print(program, target_class, field)
+print(target_class, field)
 
 cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_basic.fits'.format(target_class.lower(), field))
 output_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_pz.fits'.format(target_class.lower(), field))

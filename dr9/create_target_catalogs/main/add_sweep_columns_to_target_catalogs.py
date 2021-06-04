@@ -1,6 +1,6 @@
 # Add sweep, photo-z and stellar mass columns
 # Example:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python add_sweep_columns_to_target_catalogs.py sv3 LRG south
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python add_sweep_columns_to_target_catalogs.py LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -55,15 +55,13 @@ sweep_extra_columns = ['NEA_G', 'NEA_R', 'NEA_Z', 'BLOB_NEA_G', 'BLOB_NEA_R', 'B
 data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
 stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
-# program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
-program, target_class, field = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])
-program = program.lower()
+target_class, field = str(sys.argv[1]), str(sys.argv[2])
 target_class = target_class.upper()
 field = field.lower()
 
-print(program, target_class, field)
+print(target_class, field)
 
 cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_basic.fits'.format(target_class.lower(), field))
 output_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_more_1.fits'.format(target_class.lower(), field))
@@ -88,6 +86,8 @@ sweep_fn_list = sweep_fn_list[mask]
 
 def get_sweep_columns(sweep_fn):
 
+    sweep_extra_fn = sweep_fn.replace('/sweep/9.0/', '/sweep/9.0-extra/').replace('.fits', '-ex.fits')
+
     cat = Table(fitsio.read(sweep_fn, columns=['OBJID', 'BRICKID', 'RELEASE']))
     targetid = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
     idx = np.where(np.in1d(targetid, cat_basic['TARGETID']))[0]
@@ -96,10 +96,11 @@ def get_sweep_columns(sweep_fn):
     targetid = targetid[idx]
     cat = Table(fitsio.read(sweep_fn, rows=idx, columns=sweep_columns))
     cat['TARGETID'] = targetid
+    cat_extra = Table(fitsio.read(sweep_extra_fn, rows=idx, columns=sweep_extra_columns))
     pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz.fits')
     pz = Table(fitsio.read(pz_fn, rows=idx))
     pz.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
-    cat = hstack([cat, pz], join_type='exact')
+    cat = hstack([cat, cat_extra, pz], join_type='exact')
 
     # Add stellar mass
     stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))

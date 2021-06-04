@@ -68,40 +68,39 @@ for target_class in ['SV3_BGS_ANY', 'SV3_BGS_BRIGHT', 'SV3_LRG', 'SV3_ELG', 'SV3
         density_south = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
         mask = (density_north['dec']>32.375)
         density_north = density_north[mask]
-        mask = ~np.in1d(density_south['hp_idx'], density_north['hp_idx'])
+        mask = ~np.in1d(density_south['HPXPIXEL'], density_north['HPXPIXEL'])
         density = vstack([density_north, density_south[mask]])
-        density.rename_column('count', 'target_count')
 
         maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-        maps = maps[maps['count']>0]
+        maps = maps[maps['n_randoms']>0]
         # maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
         # maps1.remove_columns(['ra', 'dec'])
-        # maps = join(maps, maps1, join_type='inner', keys='hp_idx')
+        # maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
         maps_north = maps.copy()
 
         maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-        maps = maps[maps['count']>0]
+        maps = maps[maps['n_randoms']>0]
         # maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
         # maps1.remove_columns(['ra', 'dec'])
-        # maps = join(maps, maps1, join_type='inner', keys='hp_idx')
+        # maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
         maps_south = maps.copy()
 
         mask = (maps_north['dec']>32.375)
         maps_north = maps_north[mask]
-        mask = ~np.in1d(maps_south['hp_idx'], maps_north['hp_idx'])
+        mask = ~np.in1d(maps_south['HPXPIXEL'], maps_north['HPXPIXEL'])
         maps = vstack([maps_north, maps_south[mask]])
 
-        maps = join(maps, density[['hp_idx', 'target_count']], join_type='outer', keys='hp_idx').filled(0)
+        maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
 
         print(len(maps))
 
-        area = np.sum(maps['pix_frac'])*pix_area
+        area = np.sum(maps['FRACAREA'])*pix_area
         print('Area = {:.1f} sq deg'.format(area))
 
-        mask = maps['pix_frac']>min_pix_frac
+        mask = maps['FRACAREA']>min_pix_frac
         maps = maps[mask]
 
-        maps['density'] = maps['target_count'] / (pix_area * maps['pix_frac'])
+        maps['density'] = maps['n_targets'] / (pix_area * maps['FRACAREA'])
 
         plot_path = os.path.join(plot_dir, 'density_{}_{}.png'.format(target_class, nside))
 
@@ -110,8 +109,8 @@ for target_class in ['SV3_BGS_ANY', 'SV3_BGS_BRIGHT', 'SV3_LRG', 'SV3_ELG', 'SV3
 
         map_values = np.zeros(npix)
         hp_mask = np.zeros(npix, dtype=bool)
-        map_values[maps['hp_idx']] = maps['density']
-        hp_mask[maps['hp_idx']] = True
+        map_values[maps['HPXPIXEL']] = maps['density']
+        hp_mask[maps['HPXPIXEL']] = True
         mplot = hp.ma(map_values)
         mplot.mask = ~hp_mask
 

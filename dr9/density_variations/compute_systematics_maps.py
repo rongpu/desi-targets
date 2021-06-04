@@ -21,10 +21,10 @@ if field=='south':
 elif field=='north':
     photsys = 'N'
 
-min_nobs = 1
-maskbits = sorted([1, 13])
-# maskbits = sorted([1, 8, 9, 11, 12, 13])
+min_nobs = 2
+# maskbits = sorted([1, 13])
 # maskbits = sorted([1, 11, 12, 13])
+maskbits = sorted([1, 8, 9, 11, 12, 13])
 
 n_randoms_catalogs = 4
 
@@ -70,8 +70,8 @@ def get_systeamtics(pix_idx):
     pix_list = pix_unique[pix_idx]
 
     hp_table = Table()
-    hp_table['hp_idx'] = pix_list
-    hp_table['ra'], hp_table['dec'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
+    hp_table['HPXPIXEL'] = pix_list
+    hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
 
     arr = np.zeros([len(pix_list), len(hp_columns)])
     hp_table = hstack([hp_table, Table(arr, names=hp_columns)])
@@ -160,7 +160,7 @@ if __name__ == '__main__':
             res = pool.map(get_systeamtics, pix_idx_split)
 
         hp_table = vstack(res)
-        hp_table.sort('hp_idx')
+        hp_table.sort('HPXPIXEL')
 
         hp_table.write(os.path.join(output_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 

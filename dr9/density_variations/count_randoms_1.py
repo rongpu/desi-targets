@@ -21,17 +21,17 @@ if field=='south':
 elif field=='north':
     photsys = 'N'
 
-min_nobs = 1
-maskbits = sorted([1, 13])
-# maskbits = sorted([1, 8, 9, 11, 12, 13])
+min_nobs = 2
+# maskbits = sorted([1, 13])
 # maskbits = sorted([1, 11, 12, 13])
+maskbits = sorted([1, 8, 9, 11, 12, 13])
 
 n_processes = 32
 
 n_randoms_catalogs = 32  # There are 200 random catalogs in total
 
 # nsides = [64, 128, 256, 512]
-nsides = [512]
+nsides = [64, 128, 256]
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 
 if resolve=='resolve':
@@ -129,20 +129,20 @@ if __name__ == '__main__':
         pix_area = hp.pixelfunc.nside2pixarea(nside, degrees=True)
 
         hp_table = Table()
-        hp_table['hp_idx'] = np.arange(npix)
-        hp_table['ra'], hp_table['dec'] = hp.pixelfunc.pix2ang(nside, hp_table['hp_idx'], nest=False, lonlat=True)
-        hp_table['count'] = 0
+        hp_table['HPXPIXEL'] = np.arange(npix)
+        hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, hp_table['HPXPIXEL'], nest=False, lonlat=True)
+        hp_table['n_randoms'] = 0
 
         output_paths = sorted(glob.glob(os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_*.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))))
         print(len(output_paths))
 
         for output_path in output_paths:
-            count = np.load(output_path)
-            hp_table['count'] += count
+            n_randoms = np.load(output_path)
+            hp_table['n_randoms'] += n_randoms
 
         total_randoms_density = randoms_density * len(output_paths)
-        hp_table['pix_frac'] = hp_table['count']/(total_randoms_density*pix_area)
+        hp_table['FRACAREA'] = hp_table['n_randoms']/(total_randoms_density*pix_area)
 
         hp_table.write((os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))))
 
-    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+    print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
