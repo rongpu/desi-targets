@@ -1,4 +1,4 @@
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_weight_maps.py south LRG
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_weight_maps.py LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -32,14 +32,14 @@ min_nobs = 1
 maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
 maskbits = maskbits_dict[target_class]
 
-n_randoms_catalogs = 4
+n_randoms_catalogs = 1
 
 n_processes = 32
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256]
 # nsides = [512]
 
-randoms_columns = ['RA', 'DEC', 'MASKBITS', 'PHOTSYS',
+randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
                    'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z',
                    'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
                    'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
@@ -54,11 +54,6 @@ randoms_density = 2500
 
 weights_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.1'
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/{}/systematics/linear_weights_v0.1'.format(resolve)
-
-hp_columns = ['EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
-
-with open(os.path.join(weights_dir, "main_{}_linear_coeffs_v0.1.yaml".format(target_class)), "r") as f:
-    linear_coeffs = yaml.safe_load(f)
 
 
 def apply_mask(randoms, min_nobs, maskbits):
@@ -82,9 +77,7 @@ def get_systeamtics(pix_idx):
     hp_table = Table()
     hp_table['HPXPIXEL'] = pix_list
     hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
-
-    arr = np.zeros([len(pix_list), len(hp_columns)])
-    hp_table = hstack([hp_table, Table(arr, names=hp_columns)])
+    hp_table['density_predict'] = 0.
 
     for index in np.arange(len(pix_idx)):
 
@@ -123,6 +116,7 @@ if __name__ == '__main__':
         randoms_stack.append(randoms)
 
     randoms = vstack(randoms_stack)
+    print('Loading complete!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -143,19 +137,62 @@ if __name__ == '__main__':
         randoms['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9) - 0.184*randoms['EBV']
         randoms['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9) - 0.113*randoms['EBV']
 
-    print('Loading complete!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
-
     ############################################ Get weights #####################################################
 
-    xnames_fit = list(linear_coeffs[field].keys())
-    xnames_fit.remove('intercept')
+    if (target_class!='qso') or (field=='north'):
 
-    reg = LinearRegression()
-    reg.intercept_ = linear_coeffs[field]['intercept']
-    reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
-    
-    data = np.column_stack([randoms[xname] for xname in xnames_fit])
-    randoms['density_predict'] = reg.predict(data)
+        with open(os.path.join(weights_dir, "main_{}_linear_coeffs_v0.1.yaml".format(target_class.lower())), "r") as f:
+            linear_coeffs = yaml.safe_load(f)
+
+        xnames_fit = list(linear_coeffs[field].keys())
+        xnames_fit.remove('intercept')
+
+        # Remove bad randoms
+        mask_bad = np.full(len(randoms), False)
+        for col in xnames_fit:
+            mask_bad |= ~np.isfinite(randoms[col])
+        print('{} bad randoms'.format(np.sum(mask_bad)))
+        randoms = randoms[~mask_bad]
+
+        reg = LinearRegression()
+        reg.intercept_ = linear_coeffs[field]['intercept']
+        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
+        
+        data = np.column_stack([randoms[xname] for xname in xnames_fit])
+        randoms['density_predict'] = reg.predict(data)
+
+    else:  # QSOs have different linear weights for DES and DECaLS
+
+        with open(os.path.join(weights_dir, "main_{}_linear_coeffs_separate_des_v0.1.yaml".format(target_class.lower())), "r") as f:
+            linear_coeffs = yaml.safe_load(f)
+
+        isdes = get_isdes(randoms['RA'], randoms['DEC'], 128)
+
+        randoms['density_predict'] = 0.
+
+        xnames_fit = list(linear_coeffs['DECaLS'].keys())
+        xnames_fit.remove('intercept')
+
+        # Remove bad randoms
+        mask_bad = np.full(len(randoms), False)
+        for col in xnames_fit:
+            mask_bad |= ~np.isfinite(randoms[col])
+        print('{} bad randoms'.format(np.sum(mask_bad)))
+        randoms = randoms[~mask_bad]
+
+        reg = LinearRegression()
+        reg.intercept_ = linear_coeffs[field]['intercept']
+        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
+        data = np.column_stack([randoms[xname][~isdes] for xname in xnames_fit])
+        randoms['density_predict'][~isdes] = reg.predict(data)
+
+        xnames_fit = list(linear_coeffs['DES'].keys())
+        xnames_fit.remove('intercept')
+        reg = LinearRegression()
+        reg.intercept_ = linear_coeffs[field]['intercept']
+        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
+        data = np.column_stack([randoms[xname][isdes] for xname in xnames_fit])
+        randoms['density_predict'][isdes] = reg.predict(data)
 
     ########################################################################################################
 
@@ -181,6 +218,6 @@ if __name__ == '__main__':
         hp_table = vstack(res)
         hp_table.sort('HPXPIXEL')
 
-        hp_table.write(os.path.join(output_dir, 'linear_weights_v0.1_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        hp_table.write(os.path.join(output_dir, 'linear_weights_v0.1_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
 
     print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
