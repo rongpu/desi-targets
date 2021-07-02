@@ -1,3 +1,4 @@
+# Subsample version 0.1
 # NOT Separating DES and DECaLS footprints
 
 from __future__ import division, print_function
