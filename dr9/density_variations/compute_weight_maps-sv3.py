@@ -1,3 +1,5 @@
+################################ I have not run this script yet ################################
+
 # srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_weight_maps.py LRG south
 
 from __future__ import division, print_function
@@ -52,8 +54,8 @@ randoms_paths = randoms_paths[:n_randoms_catalogs]
 
 randoms_density = 2500
 
-weights_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.1'
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/1.0.0/{}/linear_weights_v0.1'.format(resolve)
+weights_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/sv3_v0.1'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/0.57.0/{}/linear_weights_v0.1'.format(resolve)
 
 
 def apply_mask(randoms, min_nobs, maskbits):
@@ -141,7 +143,7 @@ if __name__ == '__main__':
 
     if (target_class!='qso') or (field=='north'):
 
-        with open(os.path.join(weights_dir, "main_{}_linear_coeffs_v0.1.yaml".format(target_class.lower())), "r") as f:
+        with open(os.path.join(weights_dir, "sv3_{}_linear_coeffs_v0.1.yaml".format(target_class.lower())), "r") as f:
             linear_coeffs = yaml.safe_load(f)
 
         xnames_fit = list(linear_coeffs[field].keys())
@@ -163,7 +165,7 @@ if __name__ == '__main__':
 
     else:  # QSOs have different linear weights for DES and DECaLS
 
-        with open(os.path.join(weights_dir, "main_{}_linear_coeffs_separate_des_v0.1.yaml".format(target_class.lower())), "r") as f:
+        with open(os.path.join(weights_dir, "sv3_{}_linear_coeffs_separate_des_v0.1.yaml".format(target_class.lower())), "r") as f:
             linear_coeffs = yaml.safe_load(f)
 
         isdes = get_isdes(randoms['RA'], randoms['DEC'], 128)

@@ -14,6 +14,7 @@ def get_randoms_weights(randoms, weights_path, bin_index):
         linear_coeffs = yaml.safe_load(f)
 
     # Assign zero weights to randoms with invalid imaging properties
+    # (their fraction should be negligibly small)
     mask_bad = np.full(len(randoms), False)
     xnames_fit = list(linear_coeffs['south_bin_1'].keys())
     xnames_fit.remove('intercept')
@@ -57,7 +58,6 @@ randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTS
                    'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
 
 randoms = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns))
-
 # randoms = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns,
 #                            rows=np.arange(int(1e6))))
 

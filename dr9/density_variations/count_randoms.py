@@ -23,14 +23,14 @@ elif field=='north':
 
 min_nobs = 2
 # maskbits = sorted([1, 13])
-# maskbits = sorted([1, 11, 12, 13])
-maskbits = sorted([1, 8, 9, 11, 12, 13])
+maskbits = sorted([1, 11, 12, 13])
+# maskbits = sorted([1, 8, 9, 11, 12, 13])
 
 n_processes = 32
 
-n_randoms_catalogs = 32  # There are 200 random catalogs in total
+n_randoms_catalogs = 64  # There are 200 random catalogs in total
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256, 512, 1024]
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 
 if resolve=='resolve':
@@ -69,6 +69,14 @@ def count_randoms(randoms_path):
     elif resolve=='noresolve':
         randoms_index_str = os.path.basename(randoms_path).replace('randoms-noresolve-', '').replace('.fits', '')
 
+    all_exist = True
+    for nside in nsides:
+        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), randoms_index_str))
+        if not os.path.isfile(output_path):
+            all_exist = False
+    if all_exist:
+        return None
+
     randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
     # print(len(randoms))
 
@@ -94,6 +102,7 @@ def count_randoms(randoms_path):
         pix_count_all[pix_unique] = pix_count
 
         output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), randoms_index_str))
+
         if not os.path.isdir(os.path.dirname(output_path)):
             try:
                 os.makedirs(os.path.dirname(output_path))
@@ -124,6 +133,10 @@ if __name__ == '__main__':
 
         print(nside)
 
+        final_output_path = os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+        if os.path.isfile(final_output_path):
+            continue
+
         npix = hp.nside2npix(nside)
         pix_area = hp.pixelfunc.nside2pixarea(nside, degrees=True)
 
@@ -142,6 +155,6 @@ if __name__ == '__main__':
         total_randoms_density = randoms_density * len(output_paths)
         hp_table['FRACAREA'] = hp_table['n_randoms']/(total_randoms_density*pix_area)
 
-        hp_table.write((os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))))
+        hp_table.write(final_output_path)
 
     print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

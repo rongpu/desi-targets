@@ -20,7 +20,7 @@ min_nobs = 1
 target_bits = {'LRG': 0, 'ELG': 1, 'QSO': 2, 'BGS_ANY': 60, 'BGS_BRIGHT': 1}
 maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256, 512, 1024]
 
 target_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS']
 
@@ -103,11 +103,16 @@ if __name__ == '__main__':
     cat = cat[mask]
 
     for nside in nsides:
+
+        output_path = os.path.join(output_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+        if os.path.isfile(output_path):
+            continue
+
         npix = hp.nside2npix(nside)
         pix_allobj = hp.pixelfunc.ang2pix(nside, cat['RA'], cat['DEC'], lonlat=True)
         pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
         hp_table = get_systeamtics(pix_unique)
         hp_table['n_targets'] = pix_count
-        hp_table.write(os.path.join(output_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        hp_table.write(output_path)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

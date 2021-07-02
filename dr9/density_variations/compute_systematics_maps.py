@@ -23,14 +23,14 @@ elif field=='north':
 
 min_nobs = 2
 # maskbits = sorted([1, 13])
-# maskbits = sorted([1, 11, 12, 13])
-maskbits = sorted([1, 8, 9, 11, 12, 13])
+maskbits = sorted([1, 11, 12, 13])
+# maskbits = sorted([1, 8, 9, 11, 12, 13])
 
-n_randoms_catalogs = 4
+n_randoms_catalogs = 8
 
 n_processes = 32
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256, 512, 1024]
 # nsides = [512]
 
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
@@ -142,6 +142,10 @@ if __name__ == '__main__':
 
     for nside in nsides:
 
+        output_path = os.path.join(output_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+        if os.path.isfile(output_path):
+            continue
+
         npix = hp.nside2npix(nside)
 
         pix_allobj = hp.pixelfunc.ang2pix(nside, randoms['RA'], randoms['DEC'], lonlat=True)
@@ -162,6 +166,6 @@ if __name__ == '__main__':
         hp_table = vstack(res)
         hp_table.sort('HPXPIXEL')
 
-        hp_table.write(os.path.join(output_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        hp_table.write(output_path)
 
     print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

@@ -26,22 +26,25 @@ if not os.path.isdir(randoms_combined_dir):
 
 for maskbits in maskbits_list:
 
-    for nside in [64, 128, 256, 512]:
+    for nside in [64, 128, 256, 512, 1024]:
 
         stardens = np.load(os.path.join(stardens_dir, 'pixweight-dr7.1-0.22.0_stardens_{}_ring.npy'.format(nside)))
 
         for field in ['north', 'south']:
 
+            output_path = os.path.join(randoms_combined_dir, 'pixmap_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+            if os.path.isfile(output_path):
+                continue
+
             maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-            maps = maps[maps['count']>0]
+            maps = maps[maps['n_randoms']>0]
             maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-            maps1.remove_columns(['ra', 'dec'])
-            maps = join(maps, maps1, join_type='inner', keys='hp_idx')
-            if not np.all(np.diff(maps['hp_idx'])>0):
+            maps1.remove_columns(['RA', 'DEC'])
+            maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
+            if not np.all(np.diff(maps['HPXPIXEL'])>0):
                 raise ValueError
 
-            maps['stardens'] = stardens[maps['hp_idx']]
+            maps['STARDENS'] = stardens[maps['HPXPIXEL']]
             
-            maps.rename_columns(['hp_idx', 'ra', 'dec', 'count', 'pix_frac', 'stardens'], ['HPXPIXEL', 'RA', 'DEC', 'n_randoms', 'FRACAREA', 'STARDENS'])
-            maps.write(os.path.join(randoms_combined_dir, 'pixmap_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+            maps.write(output_path)
 

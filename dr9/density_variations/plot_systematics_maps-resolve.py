@@ -84,23 +84,23 @@ for nside in [64, 128, 256, 512]:
         os.makedirs(plot_dir)
 
     maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-    maps = maps[maps['count']>0]
+    maps = maps[maps['n_randoms']>0]
     maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-    maps1.remove_columns(['ra', 'dec'])
-    maps = join(maps, maps1, join_type='inner', keys='hp_idx')
+    maps1.remove_columns(['RA', 'DEC'])
+    maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
     maps_north = maps.copy()
 
     maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-    maps = maps[maps['count']>0]
+    maps = maps[maps['n_randoms']>0]
     maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-    maps1.remove_columns(['ra', 'dec'])
-    maps = join(maps, maps1, join_type='inner', keys='hp_idx')
+    maps1.remove_columns(['RA', 'DEC'])
+    maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
     maps_south = maps.copy()
 
-    mask = (maps_north['dec']>32.375)
+    mask = (maps_north['DEC']>32.375)
     maps_north = maps_north[mask]
 
-    mask = ~np.in1d(maps_south['hp_idx'], maps_north['hp_idx'])
+    mask = ~np.in1d(maps_south['HPXPIXEL'], maps_north['HPXPIXEL'])
     maps = vstack([maps_north, maps_south[mask]])
 
     print(len(maps))
@@ -113,7 +113,7 @@ for nside in [64, 128, 256, 512]:
 
     # Load stellar density map
     stardens = np.load('/Users/rongpu/Documents/Data/desi_lrg_selection/dr7/healpix_maps/pixweight-dr7.1-0.22.0_stardens_{}_ring.npy'.format(nside))
-    maps['stardens'] = stardens[maps['hp_idx']]
+    maps['stardens'] = stardens[maps['HPXPIXEL']]
     maps['stardens_log'] = np.log10(maps['stardens'])
 
     for index, xname in enumerate(xnames):
@@ -125,8 +125,8 @@ for nside in [64, 128, 256, 512]:
 
         map_values = np.zeros(npix)
         hp_mask = np.zeros(npix, dtype=bool)
-        map_values[maps['hp_idx']] = maps[xname]
-        hp_mask[maps['hp_idx']] = True
+        map_values[maps['HPXPIXEL']] = maps[xname]
+        hp_mask[maps['HPXPIXEL']] = True
         mplot = hp.ma(map_values)
         mplot.mask = ~hp_mask
 
