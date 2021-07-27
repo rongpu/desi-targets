@@ -20,9 +20,9 @@ sys.path.append(os.path.expanduser('~/git/desi-targets/useful'))
 from isdes import get_isdes
 
 
-randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/counts'
-randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/density_maps/0.57.0/resolve'
+randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
+randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
+target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/density_maps/0.57.0/resolve'
 
 min_nobs = 1
 maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
@@ -31,7 +31,7 @@ min_pix_frac = 0.6  # minimum fraction of pixel area to be used
 
 nside = 256
 
-output_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/linear_weights/sv3_v0.1'
+output_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/linear_weights/sv3_v0.1'
 
 xnames_fit_dict = {'BGS_ANY':['EBV', 'galdepth_rmag_ebv', 'PSFSIZE_R'],
                    'BGS_BRIGHT':['EBV', 'galdepth_rmag_ebv', 'PSFSIZE_R'],

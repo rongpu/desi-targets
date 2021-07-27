@@ -23,11 +23,11 @@ target_ver_str = '1.0.0'
 min_nobs = 1
 maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
 
-randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/counts'
-randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/density_maps/{}/resolve'.format(target_ver_str)
+randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
+randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
+target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/density_maps/{}/resolve'.format(target_ver_str)
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
 
 dpi_dict = {64: 200, 128: 200, 256: 600, 512: 1600}
 xsize_dict = {64: 8000, 128: 8000, 256: 12000, 512: 16000}

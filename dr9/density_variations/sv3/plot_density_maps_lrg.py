@@ -25,7 +25,7 @@ randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/randoms_st
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/randoms_stats/0.49.0/systematics'
 target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/unofficial/density_maps'
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/density_maps/unofficial/noresolve'
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_sys/density_maps/unofficial/noresolve'
 
 target_name = 'sv3_lrg_all'
 # target_name = 'sv3_lrg_lowdens'

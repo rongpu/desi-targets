@@ -1,6 +1,6 @@
 # Add sweep, photo-z and stellar mass columns
 # Example:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python add_sweep_columns_to_target_catalogs.py sv3 LRG south
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python add_sweep_columns_to_target_catalogs.py sv3 LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -46,12 +46,15 @@ def is_in_box(objs, radecbox, ra_col='RA', dec_col='DEC'):
 
 n_processes = 32
 
-ls_columns = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
+sweep_columns = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
               'FRACFLUX_G', 'FRACFLUX_R', 'FRACFLUX_Z', 'FRACFLUX_W1', 'FRACFLUX_W2', 'FRACMASKED_G', 'FRACMASKED_R',
-              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R']
+              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R',
+              'SHAPE_R', 'SHAPE_R_IVAR', 'SHAPE_E1', 'SHAPE_E2', 'DCHISQ']
 
-data_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0'
-stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
+sweep_extra_columns = ['NEA_G', 'NEA_R', 'NEA_Z', 'BLOB_NEA_G', 'BLOB_NEA_R', 'BLOB_NEA_Z']
+
+data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
+# stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
 # program: "main" or "sv3"
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
@@ -86,22 +89,25 @@ sweep_fn_list = sweep_fn_list[mask]
 
 def get_sweep_columns(sweep_fn):
 
+    sweep_extra_fn = sweep_fn.replace('/sweep/9.0/', '/sweep/9.0-extra/').replace('.fits', '-ex.fits')
+
     cat = Table(fitsio.read(sweep_fn, columns=['OBJID', 'BRICKID', 'RELEASE']))
     targetid = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
     idx = np.where(np.in1d(targetid, cat_basic['TARGETID']))[0]
     if len(idx)==0:
         return None
     targetid = targetid[idx]
-    cat = Table(fitsio.read(sweep_fn, rows=idx, columns=ls_columns))
+    cat = Table(fitsio.read(sweep_fn, rows=idx, columns=sweep_columns))
     cat['TARGETID'] = targetid
+    cat_extra = Table(fitsio.read(sweep_extra_fn, rows=idx, columns=sweep_extra_columns))
     pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz.fits')
     pz = Table(fitsio.read(pz_fn, rows=idx))
     pz.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
-    cat = hstack([cat, pz], join_type='exact')
+    cat = hstack([cat, cat_extra, pz], join_type='exact')
 
-    # Add stellar mass
-    stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))
-    cat['stellar_mass'] = np.load(stellar_mass_path)[idx]
+    # # Add stellar mass
+    # stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))
+    # cat['stellar_mass'] = np.load(stellar_mass_path)[idx]
 
     return cat
 
@@ -132,6 +138,6 @@ if __name__ == '__main__':
         raise ValueError('different targetid')
     cat_more.remove_column('TARGETID')
 
-    cat_more.write(output_path)
+    cat_more.write(output_path, overwrite=True)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

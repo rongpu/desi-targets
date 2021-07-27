@@ -12,7 +12,7 @@ maskbits_dark = [1, 12, 13]  # Default maskbits for LRG/ELG/QSO ["BRIGHT", "GALA
 maskbits_bgs = [1, 13]  # Default maskbits for bgs ["BRIGHT", "CLUSTER"]
 
 target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.57.0/targets'
-output_dir = '/global/cscratch1/sd/rongpu/target/catalogs/dr9.0/0.57.0'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
 
 basic_columns_main = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'DESI_TARGET', 'BGS_TARGET']
 basic_columns_sv3 = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'SV3_DESI_TARGET', 'SV3_BGS_TARGET']

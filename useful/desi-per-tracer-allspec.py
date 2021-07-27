@@ -1,8 +1,10 @@
 #!/usr/bin/envpython
 
 # To run:
+# source /project/projectdirs/desi/software/desi_environment.sh master
 # salloc -N 1 -C haswell -t 01:00:00 --qos interactive -L SCRATCH,project
 # python desi-per-tracer-allspec.py --tracer LRG --numproc 32
+# or for SV3: python desi-per-tracer-allspec.py --survey sv3 --tracer LRG --numproc 32
 
 from astropy.io import fits
 from astropy.table import Table, vstack
@@ -29,7 +31,7 @@ parser.add_argument(
     help="tracer",
     type=str,
     default=None,
-    choices=["MWS_ANY", "BGS+ANY", "LRG", "ELG", "QSO"]
+    choices=["MWS_ANY", "BGS_ANY", "LRG", "ELG", "QSO"]
 )
 parser.add_argument(
     "--specprod",
@@ -77,7 +79,7 @@ if args.survey == "main":
 okeys = ["FN", "HASCOADD", "THRUNIGHT",
     # "FOII", "FOII_ERR",
     # "GTOT", "GFIB", "GR", "RZ", "RW1", "RW2",
-    "TSNR2_ELG", "TSNR2_LRG",
+    "TSNR2_ELG", "TSNR2_LRG", 'TSNR2_BGS',
     "COADD_EFFTIME_SPEC", "COADD_EFFTIME_ETC", "COADD_EFFTIME_GFA",
     "ZDONE"]
 ofmts = ["A200", "L", "K", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "E", "L", "E", "E", "E"]
@@ -100,7 +102,8 @@ tileids = tiles["TILEID"]
 # and restricting to observed tileids
 thrunights = np.array(["00000000" for i in tileids])
 for i in range(len(tiles)):
-    fns = np.sort(glob("{}/{}/*".format(pipedir, tiles["TILEID"][i])))
+    # require 20* to reject "stash"
+    fns = np.sort(glob("{}/{}/20*".format(pipedir, tiles["TILEID"][i])))
     if len(fns) > 0:
         thrunights[i] = fns[-1].split("/")[-1]
 keep = thrunights != "00000000"
@@ -235,11 +238,11 @@ def process_redux(tileid_thrunight_petal):
             ii = np.array([np.where(scores["TARGETID"] == tid)[0][0] for tid in h["ZBEST"].data["TARGETID"]])
             if (scores["TARGETID"][ii] != h["ZBEST"].data["TARGETID"]).sum() > 0:
                 sys.exit("issue with scores "+zbfn+"; exiting")
-            for key in ["TSNR2_ELG", "TSNR2_LRG"]:
+            for key in ["TSNR2_ELG", "TSNR2_LRG", "TSNR2_BGS"]:
                 mydict[key] = scores[key][ii]
         else:
             # mydict["FOII"], mydict["FOII_ERR"] = -99 + np.zeros(ntracer), -99 + np.zeros(ntracer)
-            for key in ["TSNR2_ELG", "TSNR2_LRG"]:
+            for key in ["TSNR2_ELG", "TSNR2_LRG", "TSNR2_BGS"]:
                 mydict[key] = -99 + np.zeros(ntracer)
         # # g, gr, rz, rw1, rw2
         # mydict["GTOT"], mydict["GFIB"], mydict["GR"], mydict["RZ"], mydict["RW1"], mydict["RW2"] = get_magcol(h["FIBERMAP"].data)

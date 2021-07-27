@@ -21,11 +21,11 @@ plt.rcParams['image.cmap'] = 'jet'
 min_nobs = 2
 maskbits = sorted([1, 8, 9, 11, 12, 13])
 
-randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/noresolve/counts'
-randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/noresolve/systematics'
+randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/noresolve/counts'
+randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/noresolve/systematics'
 # target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/unofficial/density_maps'
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/systematics_maps/0.49.0/noresolve'
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_sys/systematics_maps/0.49.0/noresolve'
 
 dpi_dict = {64: 200, 128: 300, 256: 600}
 

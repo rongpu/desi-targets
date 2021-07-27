@@ -23,11 +23,11 @@ maskbits = sorted([1, 8, 9, 11, 12, 13])
 # maskbits = sorted([1, 11, 12, 13])
 # maskbits = sorted([1, 13])
 
-randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/counts'
-randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_systematics/randoms_stats/0.49.0/resolve/systematics'
+randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
+randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
 # target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/unofficial/density_maps'
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_systematics/systematics_maps/0.49.0/resolve'
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_sys/systematics_maps/0.49.0/resolve'
 
 dpi_dict = {64: 200, 128: 200, 256: 600, 512: 1600}
 xsize_dict = {64: 8000, 128: 8000, 256: 12000, 512: 16000}

@@ -48,12 +48,13 @@ n_processes = 32
 
 sweep_columns = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
               'FRACFLUX_G', 'FRACFLUX_R', 'FRACFLUX_Z', 'FRACFLUX_W1', 'FRACFLUX_W2', 'FRACMASKED_G', 'FRACMASKED_R',
-              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R']
+              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R',
+              'SHAPE_R', 'SHAPE_R_IVAR', 'SHAPE_E1', 'SHAPE_E2', 'DCHISQ']
 
 sweep_extra_columns = ['NEA_G', 'NEA_R', 'NEA_Z', 'BLOB_NEA_G', 'BLOB_NEA_R', 'BLOB_NEA_Z']
 
 data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
-stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
+# stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
 # field: "north" or "south"
@@ -102,9 +103,9 @@ def get_sweep_columns(sweep_fn):
     pz.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
     cat = hstack([cat, cat_extra, pz], join_type='exact')
 
-    # Add stellar mass
-    stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))
-    cat['stellar_mass'] = np.load(stellar_mass_path)[idx]
+    # # Add stellar mass
+    # stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))
+    # cat['stellar_mass'] = np.load(stellar_mass_path)[idx]
 
     return cat
 
@@ -135,6 +136,6 @@ if __name__ == '__main__':
         raise ValueError('different targetid')
     cat_more.remove_column('TARGETID')
 
-    cat_more.write(output_path)
+    cat_more.write(output_path, overwrite=True)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
