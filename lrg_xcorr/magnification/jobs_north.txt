@@ -1,0 +1,3 @@
+srun -N 1 python rf_photoz_with_magnification.py north 0.99
+srun -N 1 python rf_photoz_with_magnification.py north 1.
+srun -N 1 python rf_photoz_with_magnification.py north 1.01
