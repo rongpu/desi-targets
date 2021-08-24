@@ -98,6 +98,8 @@ for field in ['north', 'south']:
                 | (rmag - w1mag > 3.4)
             )  # double sliding cuts and high-z extension
 
+        counts['{}_all_{:.3f}'.format(field, magnification)] = int(np.sum(mask_quality & mask_lrg))
+
         if field=='south':
             pz_cuts = [0.400, 0.540, 0.713, 0.860, 1.020]
         else:

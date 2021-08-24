@@ -1,3 +1,6 @@
+north_all_0.990: 2692425
+north_all_1.000: 2762777
+north_all_1.010: 2833509
 north_bin_1_0.990: 375802
 north_bin_1_1.000: 385538
 north_bin_1_1.010: 395238
@@ -10,6 +13,9 @@ north_bin_3_1.010: 766483
 north_bin_4_0.990: 666513
 north_bin_4_1.000: 684423
 north_bin_4_1.010: 701886
+south_all_0.990: 7622271
+south_all_1.000: 7817211
+south_all_1.010: 8013859
 south_bin_1_0.990: 1056923
 south_bin_1_1.000: 1082988
 south_bin_1_1.010: 1109563
