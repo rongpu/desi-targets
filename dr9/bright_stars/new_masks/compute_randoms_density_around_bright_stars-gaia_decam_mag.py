@@ -1,4 +1,5 @@
 # Pre-compute the density of randoms around GAIA stars
+# in bins of predicted DECam magnitude
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -13,15 +14,6 @@ from scipy import stats
 
 # sys.path.append(os.path.expanduser('~/git/Python/user_modules/'))
 # from match_coord import search_around, scatter_plot, match_coord
-
-
-def binned_mean(x, y, vmin=None, vmax=None, nbins=25):
-    if vmin is None or vmax is None:
-        vmin, vmax = np.percentile(x, [0.5, 99.5])
-    bins = np.linspace(vmin, vmax, nbins)
-    bin_mean, bin_edges, binnumber = stats.binned_statistic(x, y, statistic='mean', bins=bins)
-    bin_center = (bin_edges[1:] + bin_edges[:-1])/2
-    return bin_center, bin_edges, bin_mean
 
 
 def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
@@ -39,16 +31,19 @@ def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
     mask = mesh_d2d >= bins.max()-bin_spacing
     density[mask] = np.nan
 
-    return bins, density
+    return bins, density, count
 
+
+decam_band = 'z'
 
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 n_randoms_catalogs = 4
 
-gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18.fits'
+gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'
+gaia_decam_mags_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9-predict_decam.fits'
 
-randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
-gaia_columns = ['RA', 'DEC', 'PHOT_G_MEAN_MAG']
+# randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
+gaia_columns = ['RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR']
 
 randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
 randoms_paths = randoms_paths[:n_randoms_catalogs]
@@ -62,17 +57,20 @@ field = str(sys.argv[1])
 field = field.lower()
 
 min_nobs = 1
-maskbits = [1, 13]
-# maskbits = [1, 12, 13]
-# maskbits = [1, 8, 9, 12, 13]
-# maskbits = [1, 8, 9, 11, 12, 13]
+maskbits = [1, 12, 13]
 
 if field=='south':
     photsys = 'S'
 else:
     photsys = 'N'
 
-gaia = fitsio.read(gaia_path, columns=gaia_columns)
+gaia = Table(fitsio.read(gaia_path, columns=gaia_columns))
+gaia_decam_mags = Table(fitsio.read(gaia_decam_mags_path))
+gaia = hstack([gaia, gaia_decam_mags], join_type='exact')
+print(len(gaia))
+
+mask = np.isfinite(gaia['decam_mag_z'])
+gaia = gaia[mask]
 print(len(gaia))
 
 if field=='south':
@@ -84,33 +82,12 @@ else:
     gaia = gaia[mask]
 print(len(gaia))
 
-randoms_stack = []
+randoms = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/tmp/randoms_{}_minobs_{}_maskbits_{}-wise_v3.fits'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+print('randoms:', len(randoms))
 
-for randoms_path in randoms_paths:
-    print(randoms_path)
-
-    randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
-
-    mask = (randoms['PHOTSYS']==photsys)
-    randoms = randoms[mask]
-
-    mask = (randoms['NOBS_G']>=min_nobs) & (randoms['NOBS_R']>=min_nobs) & (randoms['NOBS_Z']>=min_nobs)
-    randoms = randoms[mask]
-
-    # Apply masks
-    randoms_clean = np.ones(len(randoms), dtype=bool)
-    for bit in maskbits:
-        randoms_clean &= (randoms['MASKBITS'] & 2**bit)==0
-    randoms = randoms[randoms_clean]
-
-    mask = (randoms['DEC']>-30)
-    randoms = randoms[mask]
-    print(len(randoms))
-
-    randoms_stack.append(randoms)
-
-randoms = vstack(randoms_stack)
-print(len(randoms))
+mask_remove = randoms['w1_mask']
+print('New WISE mask:', np.sum(mask_remove), np.sum(mask_remove)/len(mask_remove))
+randoms = randoms[~mask_remove]
 
 ##################################################################################################################################
 
@@ -118,8 +95,12 @@ ra2_rand = np.array(randoms['RA'])
 dec2_rand = np.array(randoms['DEC'])
 sky2_rand = SkyCoord(ra2_rand*u.degree, dec2_rand*u.degree, frame='icrs')
 
-gaia_min_list = [-np.inf, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-gaia_max_list = [6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+gaia_min_list = np.array([-np.inf, 4, 5, 6, 7, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5])
+gaia_max_list = np.array([4, 5, 6, 7, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0])
+
+if decam_band=='z':
+    gaia_min_list -= 1.  # offset for DECam_z
+    gaia_max_list -= 1.  # offset for DECam_z
 
 data = {}
 
@@ -136,16 +117,16 @@ for index in range(len(gaia_min_list)):
     if gaia_min==-np.inf:
         search_radius = 4000.
     else:
-        search_radius = plot_radius * 1630 * 1.396**(-gaia_min)
+        search_radius = plot_radius * 1630 * 1.396**(-(gaia_min+1))
 
-    mask = (gaia['PHOT_G_MEAN_MAG']>gaia_min) & (gaia['PHOT_G_MEAN_MAG']<gaia_max)
+    mask = (gaia['decam_mag_'+decam_band]>gaia_min) & (gaia['decam_mag_'+decam_band]<gaia_max)
     ra1 = gaia['RA'][mask]
     dec1 = gaia['DEC'][mask]
     gaia1 = gaia[mask]
     if gaia_min==-np.inf:
-        title = 'GAIA_G < {:.1f}'.format(gaia_max, np.sum(mask))
+        title = 'DECam_{} < {:.1f}'.format(decam_band, gaia_max)
     else:
-        title = '{:.1f} < GAIA_G < {:.1f}'.format(gaia_min, gaia_max, np.sum(mask))
+        title = '{:.1f} < DECam_{} < {:.1f}'.format(gaia_min, decam_band, gaia_max)
 
     print(title, '{} stars'.format(np.sum(mask)))
 
@@ -156,9 +137,9 @@ for index in range(len(gaia_min_list)):
     print('%d nearby objects'%len(idx1_rand))
     # convert distances to numpy array in arcsec
     d2d_rand = np.array(d2d_rand.to(u.arcsec))
-    gaia_g = gaia1['PHOT_G_MEAN_MAG'][idx1_rand]
+    gaia_g = gaia1['decam_mag_'+decam_band][idx1_rand]
     # mask_radius = 150. * 2.5**((11. - gaia_g)/3.) * 0.262
-    mask_radius = 1630 * 1.396**(-gaia_g)
+    mask_radius = 1630 * 1.396**(-(gaia_g+1))
     d2d_rand = d2d_rand / mask_radius
     mask = d2d_rand < plot_radius
     idx1_rand = idx1_rand[mask]
@@ -176,12 +157,13 @@ for index in range(len(gaia_min_list)):
     d_ra_rand = d_ra_rand / mask_radius
     d_dec_rand = d_dec_rand / mask_radius
 
-    bins, density_rand = get_density(d_ra_rand, d_dec_rand, d2d_rand, plot_radius, nbins=nbins, min_count=100)
+    bins, density_rand, count_rand = get_density(d_ra_rand, d_dec_rand, d2d_rand, plot_radius, nbins=nbins, min_count=None)
     key_str = '{:g}_{:g}'.format(gaia_min, gaia_max)
     data[key_str+'_bins'] = bins
     data[key_str+'_density_rand'] = density_rand
+    data[key_str+'_count'] = count_rand
 
 data['n_randoms'] = len(randoms)
 
-save_path = 'data/density_rand_gaia_{}_minobs_{}_maskbits_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
+save_path = '/global/u2/r/rongpu/notebooks/desi_mask/data/new_mask/density_rand_gaia_decam_{}_{}_minobs_{}_maskbits_{}_wise_v3.npy'.format(decam_band, field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
 np.save(save_path, data)

@@ -45,10 +45,9 @@ def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 n_randoms_catalogs = 4
 
-gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18.fits'
+wise_path = '/global/project/projectdirs/desi/users/rongpu/useful/w1_bright-13.3_trim.fits'
 
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
-gaia_columns = ['RA', 'DEC', 'PHOT_G_MEAN_MAG']
 
 randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
 randoms_paths = randoms_paths[:n_randoms_catalogs]
@@ -62,27 +61,27 @@ field = str(sys.argv[1])
 field = field.lower()
 
 min_nobs = 1
-maskbits = [1, 13]
 # maskbits = [1, 12, 13]
 # maskbits = [1, 8, 9, 12, 13]
-# maskbits = [1, 8, 9, 11, 12, 13]
+maskbits = [1, 8, 9, 11, 12, 13]
 
 if field=='south':
     photsys = 'S'
 else:
     photsys = 'N'
 
-gaia = fitsio.read(gaia_path, columns=gaia_columns)
-print(len(gaia))
+wise = Table(fitsio.read(wise_path))
+print(len(wise))
 
 if field=='south':
-    mask = (gaia['DEC']<34)
-    gaia = gaia[mask]
+    mask = (wise['DEC']<34) & (wise['DEC']>-35)
 else:
-    mask = (gaia['DEC']>30)
-    mask &= (gaia['RA']<310) & (gaia['RA']>75)
-    gaia = gaia[mask]
-print(len(gaia))
+    mask = (wise['DEC']>30)
+    mask &= (wise['RA']<310) & (wise['RA']>75)
+wise = wise[mask]
+print(len(wise))
+
+wise['w1ab'] = np.array(wise['W1MPRO']) + 2.7
 
 randoms_stack = []
 
@@ -114,74 +113,58 @@ print(len(randoms))
 
 ##################################################################################################################################
 
-ra2_rand = np.array(randoms['RA'])
-dec2_rand = np.array(randoms['DEC'])
+temp = SkyCoord(ra=wise['RA']*u.degree, dec=wise['DEC']*u.degree, frame='icrs').geocentrictrueecliptic
+ra1, dec1 = np.array(temp.lon), np.array(temp.lat)
+
+temp = SkyCoord(ra=randoms['RA']*u.degree, dec=randoms['DEC']*u.degree, frame='icrs').geocentrictrueecliptic
+ra2_rand, dec2_rand = np.array(temp.lon), np.array(temp.lat)
 sky2_rand = SkyCoord(ra2_rand*u.degree, dec2_rand*u.degree, frame='icrs')
 
-gaia_min_list = [-np.inf, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-gaia_max_list = [6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+w1min_list = [-np.inf, 6, 8, 9, 10, 11, 12, 13, 14, 15]
+w1max_list = [6, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+search_radius_list = [1000, 600, 350, 280, 240, 150, 120, 80, 60, 45]
 
 data = {}
 
-for index in range(len(gaia_min_list)):
-
-    gaia_min, gaia_max = gaia_min_list[index], gaia_max_list[index]
+for index in range(len(w1min_list)):
 
     if index<2:
-        nbins = 101
+        nbins = 75
     else:
-        nbins = 101
+        nbins = 75
+    search_radius = search_radius_list[index]
 
-    plot_radius = 4.1
-    if gaia_min==-np.inf:
-        search_radius = 4000.
-    else:
-        search_radius = plot_radius * 1630 * 1.396**(-gaia_min)
+    w1min, w1max = w1min_list[index], w1max_list[index]
+    mask = (wise['w1ab']>w1min) & (wise['w1ab']<w1max)
+    ra1_new, dec1_new = ra1[mask], dec1[mask]
+    sky1 = SkyCoord(ra1_new*u.degree, dec1_new*u.degree, frame='icrs')
 
-    mask = (gaia['PHOT_G_MEAN_MAG']>gaia_min) & (gaia['PHOT_G_MEAN_MAG']<gaia_max)
-    ra1 = gaia['RA'][mask]
-    dec1 = gaia['DEC'][mask]
-    gaia1 = gaia[mask]
-    if gaia_min==-np.inf:
-        title = 'GAIA_G < {:.1f}'.format(gaia_max, np.sum(mask))
+    if w1min==-np.inf:
+        title = 'WISE_W1_AB < {:.1f}'.format(w1max, np.sum(mask))
     else:
-        title = '{:.1f} < GAIA_G < {:.1f}'.format(gaia_min, gaia_max, np.sum(mask))
+        title = '{:.1f} < WISE_W1_AB < {:.1f}'.format(w1min, w1max, np.sum(mask))
 
     print(title, '{} stars'.format(np.sum(mask)))
-
-    sky1 = SkyCoord(ra1*u.degree, dec1*u.degree, frame='icrs')
 
     # randoms
     idx1_rand, idx2_rand, d2d_rand, _ = sky2_rand.search_around_sky(sky1, seplimit=search_radius*u.arcsec)
     print('%d nearby objects'%len(idx1_rand))
-    # convert distances to numpy array in arcsec
-    d2d_rand = np.array(d2d_rand.to(u.arcsec))
-    gaia_g = gaia1['PHOT_G_MEAN_MAG'][idx1_rand]
-    # mask_radius = 150. * 2.5**((11. - gaia_g)/3.) * 0.262
-    mask_radius = 1630 * 1.396**(-gaia_g)
-    d2d_rand = d2d_rand / mask_radius
-    mask = d2d_rand < plot_radius
-    idx1_rand = idx1_rand[mask]
-    idx2_rand = idx2_rand[mask]
-    d2d_rand = d2d_rand[mask]
-    mask_radius = mask_radius[mask]
-    d_ra_rand = (ra2_rand[idx2_rand]-ra1[idx1_rand])*3600.     # in arcsec
-    d_dec_rand = (dec2_rand[idx2_rand]-dec1[idx1_rand])*3600.  # in arcsec
+    d2d_rand = np.array(d2d_rand.to(u.arcsec))  # convert distances to numpy array in arcsec
+    d_ra_rand = (ra2_rand[idx2_rand]-ra1_new[idx1_rand])*3600.    # in arcsec
+    d_dec_rand = (dec2_rand[idx2_rand]-dec1_new[idx1_rand])*3600. # in arcsec
     # Convert d_ra_rand to actual arcsecs
     mask = d_ra_rand > 180*3600
     d_ra_rand[mask] = d_ra_rand[mask] - 360.*3600
     mask = d_ra_rand < -180*3600
     d_ra_rand[mask] = d_ra_rand[mask] + 360.*3600
-    d_ra_rand = d_ra_rand * np.cos(dec1[idx1_rand]/180*np.pi)
-    d_ra_rand = d_ra_rand / mask_radius
-    d_dec_rand = d_dec_rand / mask_radius
+    d_ra_rand = d_ra_rand * np.cos(dec1_new[idx1_rand]/180*np.pi)
 
-    bins, density_rand = get_density(d_ra_rand, d_dec_rand, d2d_rand, plot_radius, nbins=nbins, min_count=100)
-    key_str = '{:g}_{:g}'.format(gaia_min, gaia_max)
+    bins, density_rand = get_density(d_ra_rand, d_dec_rand, d2d_rand, search_radius, nbins=nbins, min_count=100)
+    key_str = '{:g}_{:g}'.format(w1min, w1max)
     data[key_str+'_bins'] = bins
     data[key_str+'_density_rand'] = density_rand
 
 data['n_randoms'] = len(randoms)
 
-save_path = 'data/density_rand_gaia_{}_minobs_{}_maskbits_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
+save_path = 'data/density_rand_wise_{}_minobs_{}_maskbits_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
 np.save(save_path, data)

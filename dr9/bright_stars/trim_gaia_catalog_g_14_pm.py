@@ -1,4 +1,5 @@
-# Select G<18 stars within 1.5 degree of a brick center
+# Select G<14 stars within 1.5 degree of a brick center
+# Add PM columns
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -16,10 +17,10 @@ from astropy.coordinates import SkyCoord
 
 
 # gaia_dir = '/project/projectdirs/cosmo/data/gaia/dr2/healpix'
-# output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18_dr9.fits'
+# output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18.fits'
 
 gaia_dir = '/project/projectdirs/cosmo/data/gaia/edr3/healpix'
-output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_14_pm_dr9.fits'
 
 search_radius = 1.5 * 3600.
 search_radius_init = 4 * 3600.  # search radius for the initial healpix selection
@@ -53,13 +54,13 @@ for index, hp_index in enumerate(gaia_list):
     if index%100==0:
         print('{}/{}, {}'.format(index, len(gaia_list), gaia_fn))
     tmp = Table(fitsio.read(os.path.join(gaia_dir, 'healpix-{}.fits'.format(gaia_fn)), columns=['RA', 'DEC', 'PHOT_G_MEAN_MAG']))
-    mask_mag = tmp['PHOT_G_MEAN_MAG']<18.0
+    mask_mag = tmp['PHOT_G_MEAN_MAG']<14.0
     sky1 = SkyCoord(tmp['RA'][mask_mag]*u.degree, tmp['DEC'][mask_mag]*u.degree, frame='icrs')
     idx1, _, _, _ = sky2.search_around_sky(sky1, seplimit=search_radius*u.arcsec)
 
     if len(idx1)>0:
         idx = np.where(mask_mag)[0][idx1]
-        tmp = Table(fitsio.read(os.path.join(gaia_dir, 'healpix-{}.fits'.format(gaia_fn)), rows=idx, columns=['SOURCE_ID', 'RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_BP_MEAN_MAG', 'PHOT_RP_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR', 'ASTROMETRIC_EXCESS_NOISE']))
+        tmp = Table(fitsio.read(os.path.join(gaia_dir, 'healpix-{}.fits'.format(gaia_fn)), rows=idx, columns=['SOURCE_ID', 'RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_BP_MEAN_MAG', 'PHOT_RP_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR', 'ASTROMETRIC_EXCESS_NOISE', 'PARALLAX', 'PARALLAX_ERROR', 'PMRA', 'PMRA_ERROR', 'PMDEC', 'PMDEC_ERROR']))
         gaia.append(tmp)
 gaia = vstack(gaia)
 print(len(gaia))

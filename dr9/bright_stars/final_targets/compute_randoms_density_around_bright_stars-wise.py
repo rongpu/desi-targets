@@ -45,7 +45,7 @@ def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 n_randoms_catalogs = 4
 
-wise_path = '/global/project/projectdirs/desi/users/rongpu/useful/w1_bright-13.3_trim.fits'
+wise_path = '/global/cfs/cdirs/desi/users/rongpu/useful/w1_bright-2mass-13.3-dr9.fits'
 
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 
@@ -62,8 +62,8 @@ field = field.lower()
 
 min_nobs = 1
 # maskbits = [1, 12, 13]
-# maskbits = [1, 8, 9, 12, 13]
-maskbits = [1, 8, 9, 11, 12, 13]
+maskbits = [1, 8, 9, 12, 13]
+# maskbits = [1, 8, 9, 11, 12, 13]
 
 if field=='south':
     photsys = 'S'
@@ -74,9 +74,9 @@ wise = Table(fitsio.read(wise_path))
 print(len(wise))
 
 if field=='south':
-    mask = (wise['DEC']<34) & (wise['DEC']>-35)
+    mask = (wise['DEC']<36)
 else:
-    mask = (wise['DEC']>30)
+    mask = (wise['DEC']>31)
     mask &= (wise['RA']<310) & (wise['RA']>75)
 wise = wise[mask]
 print(len(wise))
@@ -102,8 +102,10 @@ for randoms_path in randoms_paths:
         randoms_clean &= (randoms['MASKBITS'] & 2**bit)==0
     randoms = randoms[randoms_clean]
 
-    mask = (randoms['DEC']>-30)
-    randoms = randoms[mask]
+    # Remove pixels near the LMC
+    ramin, ramax, decmin, decmax = 58, 110, -90, -56
+    mask_remove = (randoms['RA']>ramin) & (randoms['RA']<ramax) & (randoms['DEC']>decmin) & (randoms['DEC']<decmax)
+    randoms = randoms[~mask_remove]
     print(len(randoms))
 
     randoms_stack.append(randoms)
@@ -111,18 +113,20 @@ for randoms_path in randoms_paths:
 randoms = vstack(randoms_stack)
 print(len(randoms))
 
+del randoms_stack
+
 ##################################################################################################################################
 
 temp = SkyCoord(ra=wise['RA']*u.degree, dec=wise['DEC']*u.degree, frame='icrs').geocentrictrueecliptic
-ra1, dec1 = np.array(temp.lon), np.array(temp.lat)
+wise['RA1'], wise['DEC1'] = np.array(temp.lon), np.array(temp.lat)
 
 temp = SkyCoord(ra=randoms['RA']*u.degree, dec=randoms['DEC']*u.degree, frame='icrs').geocentrictrueecliptic
 ra2_rand, dec2_rand = np.array(temp.lon), np.array(temp.lat)
 sky2_rand = SkyCoord(ra2_rand*u.degree, dec2_rand*u.degree, frame='icrs')
 
-w1min_list = [-np.inf, 6, 8, 9, 10, 11, 12, 13, 14, 15]
-w1max_list = [6, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-search_radius_list = [1000, 600, 350, 280, 240, 150, 120, 80, 60, 45]
+w1min_list = np.arange(-2., 16., 0.5)
+w1max_list = w1min_list + 0.5
+search_radius_list = 221.3 * 1.393**(-(w1max_list-2.599-2.699)) * 5
 
 data = {}
 
@@ -136,8 +140,8 @@ for index in range(len(w1min_list)):
 
     w1min, w1max = w1min_list[index], w1max_list[index]
     mask = (wise['w1ab']>w1min) & (wise['w1ab']<w1max)
-    ra1_new, dec1_new = ra1[mask], dec1[mask]
-    sky1 = SkyCoord(ra1_new*u.degree, dec1_new*u.degree, frame='icrs')
+    ra1, dec1 = wise['RA1'][mask], wise['DEC1'][mask]
+    sky1 = SkyCoord(ra1*u.degree, dec1*u.degree, frame='icrs')
 
     if w1min==-np.inf:
         title = 'WISE_W1_AB < {:.1f}'.format(w1max, np.sum(mask))
@@ -148,16 +152,18 @@ for index in range(len(w1min_list)):
 
     # randoms
     idx1_rand, idx2_rand, d2d_rand, _ = sky2_rand.search_around_sky(sky1, seplimit=search_radius*u.arcsec)
+    if len(idx1_rand)==0:
+        continue
     print('%d nearby objects'%len(idx1_rand))
     d2d_rand = np.array(d2d_rand.to(u.arcsec))  # convert distances to numpy array in arcsec
-    d_ra_rand = (ra2_rand[idx2_rand]-ra1_new[idx1_rand])*3600.    # in arcsec
-    d_dec_rand = (dec2_rand[idx2_rand]-dec1_new[idx1_rand])*3600. # in arcsec
+    d_ra_rand = (ra2_rand[idx2_rand]-ra1[idx1_rand])*3600.     # in arcsec
+    d_dec_rand = (dec2_rand[idx2_rand]-dec1[idx1_rand])*3600.  # in arcsec
     # Convert d_ra_rand to actual arcsecs
     mask = d_ra_rand > 180*3600
     d_ra_rand[mask] = d_ra_rand[mask] - 360.*3600
     mask = d_ra_rand < -180*3600
     d_ra_rand[mask] = d_ra_rand[mask] + 360.*3600
-    d_ra_rand = d_ra_rand * np.cos(dec1_new[idx1_rand]/180*np.pi)
+    d_ra_rand = d_ra_rand * np.cos(dec1[idx1_rand]/180*np.pi)
 
     bins, density_rand = get_density(d_ra_rand, d_dec_rand, d2d_rand, search_radius, nbins=nbins, min_count=100)
     key_str = '{:g}_{:g}'.format(w1min, w1max)
@@ -166,5 +172,5 @@ for index in range(len(w1min_list)):
 
 data['n_randoms'] = len(randoms)
 
-save_path = 'data/density_rand_wise_{}_minobs_{}_maskbits_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
+save_path = '/global/u2/r/rongpu/notebooks/desi_mask/data/density_rand_wise_{}_minobs_{}_maskbits_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in maskbits]))
 np.save(save_path, data)
