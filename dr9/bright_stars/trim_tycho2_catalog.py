@@ -14,19 +14,13 @@ import healpy as hp
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-tycho2_path = '/global/cfs/cdirs/desi/users/rongpu/useful/Tycho-2.fits'
-output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/Tycho-2-dr9.fits'
+tycho2_path = '/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference-dr9.fits'
 
 search_radius = 1.5 * 3600.
 
 tycho2 = Table(fitsio.read(tycho2_path))
 tycho2['idx'] = np.arange(len(tycho2))
-
-tycho2.rename_columns(['RAmdeg', 'DEmdeg'], ['RA', 'DEC'])
-
-mask = np.isfinite(tycho2['RA']) & np.isfinite(tycho2['DEC'])
-print(np.sum(~mask)/len(mask))
-tycho2 = tycho2[mask]
 
 bricks_south = Table(fitsio.read('/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/south/survey-bricks-dr9-south.fits.gz'))
 bricks_north = Table(fitsio.read('/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/north/survey-bricks-dr9-north.fits.gz'))
@@ -45,6 +39,7 @@ sky1 = SkyCoord(tycho2['RA']*u.degree, tycho2['DEC']*u.degree, frame='icrs')
 
 idx1, _, _, _ = sky2.search_around_sky(sky1, seplimit=search_radius*u.arcsec)
 idx1 = np.unique(idx1)
+print(len(idx1), len(idx1)/len(tycho2))
 tycho2 = tycho2[idx1]
 
 tycho2.write(output_path, overwrite=True)
