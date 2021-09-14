@@ -37,7 +37,7 @@ for col in gaia_columns:
 
 ####################### Add custom masks ########################
 
-custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/misc/desi_custom_mask.txt'
+custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/desi_custom_mask_v1.txt'
 with open(custom_mask_fn, 'r') as f:
     lines = list(map(str.strip, f.readlines()))
     

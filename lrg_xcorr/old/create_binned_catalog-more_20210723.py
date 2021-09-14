@@ -23,7 +23,7 @@ def apply_mask(cat, min_nobs, maskbits):
 
 
 min_nobs = 1
-maskbits = []
+maskbits = [1, 8, 9, 11, 12, 13]
 
 basic_columns = ['TARGETID', 'RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 photom_columns = ['EBV']
@@ -80,7 +80,6 @@ cat = vstack(cat_stack)
 cat = cat[columns_to_keep]
 print(len(cat))
 
-output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_20210913_more.fits'.format(min_nobs)
+output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_maskbits_{}_20210723_more.fits'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits]))
 print(output_path)
 cat.write(output_path, overwrite=False)
-

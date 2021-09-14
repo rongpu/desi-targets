@@ -22,7 +22,7 @@ def apply_mask(cat, min_nobs, maskbits):
 
 
 min_nobs = 1
-maskbits = [1, 8, 9, 11, 12, 13]
+maskbits = []
 
 basic_columns = ['TARGETID', 'RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 photom_columns = ['EBV', 'FLUX_G', 'FLUX_R', 'FLUX_Z',
@@ -37,7 +37,8 @@ for field in ['north', 'south']:
     cat0 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_basic.fits'.format(field), columns=basic_columns))
     cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_photom.fits'.format(field), columns=photom_columns))
     pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_pz_new.fits'.format(field)))
-    cat = hstack([cat0, cat, pz], join_type='exact')
+    lrgmask = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_lrgmask_v1.fits'.format(field)))
+    cat = hstack([cat0, cat, pz, lrgmask], join_type='exact')
     print(len(cat))
 
     mask = apply_mask(cat, min_nobs, maskbits)
@@ -72,6 +73,7 @@ cat = vstack(cat_stack)
 # cat = cat[columns_to_keep]
 print(len(cat))
 
-output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_maskbits_{}_20210723.fits'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits]))
+output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_20210913.fits'.format(min_nobs)
 print(output_path)
 cat.write(output_path, overwrite=False)
+
