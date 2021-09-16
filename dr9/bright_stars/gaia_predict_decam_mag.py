@@ -27,7 +27,7 @@ coeffs = dict(
 bprp_min, bprp_max = -0.5, 4.7
 
 
-gaia = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'))
+gaia = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_dr9.fits'))
 
 for band in ['g', 'r', 'z']:
     mag = np.copy(gaia['PHOT_G_MEAN_MAG'])
@@ -42,5 +42,5 @@ for band in ['g', 'r', 'z']:
     gaia['decam_mag_'+band][mask] = np.nan
 
 gaia = gaia[['decam_mag_g', 'decam_mag_r', 'decam_mag_z']]
-gaia.write('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9-predict_decam.fits')
+gaia.write('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_predict_decam_dr9.fits')
 

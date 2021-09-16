@@ -35,8 +35,8 @@ f_radius_log_north = interp1d(mags, log_radii, bounds_error=False, fill_value='e
 f_radius_north = lambda mags: 10**f_radius_log_north(mags)
 
 gaia_columns = ['RA', 'DEC', 'mask_mag']
-gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference.fits'
-gaia_suppl_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference_suppl.fits'
+gaia_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_dr9.fits'
+gaia_suppl_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_suppl_dr9.fits'
 
 hdu = fits.open(gaia_path)
 gaia = Table()

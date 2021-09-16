@@ -14,7 +14,7 @@ from match_coord import search_around
 
 ##################################### Tycho-2 stars missing from GAIA EDR3 #####################################
 
-tycho2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference-dr9.fits'))
+tycho2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/tycho2-reference-dr9.fits'))
 print(len(tycho2))
 
 mask = tycho2['MAG_VT']<10.
@@ -22,7 +22,7 @@ mask &= (tycho2['MAG_VT']!=0) | (tycho2['MAG_HP']!=0)
 print(np.sum(mask)/len(mask))
 tycho2 = tycho2[mask]
 
-gaia_pm_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_14_pm_dr9.fits'
+gaia_pm_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_14_pm_dr9.fits'
 gaia_pm = Table(fitsio.read(gaia_pm_path))
 
 mask = (tycho2['EPOCH_RA']!=0) & (tycho2['EPOCH_DEC']!=0)
@@ -54,8 +54,8 @@ print(np.sum(tycho2['mask_mag']==-99), np.sum(np.isnan(tycho2['mask_mag'])))
 
 ##################################### GAIA EDR3 #####################################
 
-gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'
-gaia_decam_mags_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9-predict_decam.fits'
+gaia_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_dr9.fits'
+gaia_decam_mags_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_predict_decam_dr9.fits'
 
 gaia_columns = ['RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR']
 
@@ -81,5 +81,5 @@ gaia['is_tycho2'] = False
 
 gaia = vstack([tycho2, gaia], join_type='exact')
 
-gaia.write('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference.fits')
+gaia.write('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_dr9.fits')
 

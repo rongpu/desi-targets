@@ -19,7 +19,7 @@ from astropy.coordinates import SkyCoord
 # output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18_dr9.fits'
 
 gaia_dir = '/project/projectdirs/cosmo/data/gaia/edr3/healpix'
-output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_dr9.fits'
 
 search_radius = 1.5 * 3600.
 search_radius_init = 4 * 3600.  # search radius for the initial healpix selection

@@ -23,8 +23,13 @@ elif field=='north':
 
 min_nobs = 2
 # maskbits = sorted([1, 13])
-maskbits = sorted([1, 11, 12, 13])
+# maskbits = sorted([1, 11, 12, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
+
+maskbits = []
+apply_lrgmask = True
+if apply_lrgmask:
+    lrgmask = '_lrgmask_v1'
 
 n_processes = 32
 
@@ -71,7 +76,7 @@ def count_randoms(randoms_path):
 
     all_exist = True
     for nside in nsides:
-        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), randoms_index_str))
+        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask, randoms_index_str))
         if not os.path.isfile(output_path):
             all_exist = False
     if all_exist:
@@ -101,7 +106,7 @@ def count_randoms(randoms_path):
         pix_count_all = np.zeros(npix, dtype=int)
         pix_count_all[pix_unique] = pix_count
 
-        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), randoms_index_str))
+        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask, randoms_index_str))
 
         if not os.path.isdir(os.path.dirname(output_path)):
             try:
@@ -133,7 +138,7 @@ if __name__ == '__main__':
 
         print(nside)
 
-        final_output_path = os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+        final_output_path = os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask))
         if os.path.isfile(final_output_path):
             continue
 
@@ -145,7 +150,7 @@ if __name__ == '__main__':
         hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, hp_table['HPXPIXEL'], nest=False, lonlat=True)
         hp_table['n_randoms'] = 0
 
-        output_paths = sorted(glob.glob(os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])), '{}_nside_{}_minobs_{}_maskbits_{}_*.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))))
+        output_paths = sorted(glob.glob(os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_*.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask))))
         print(len(output_paths))
 
         for output_path in output_paths:

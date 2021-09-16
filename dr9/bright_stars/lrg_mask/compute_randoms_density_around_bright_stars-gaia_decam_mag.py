@@ -39,8 +39,8 @@ decam_band = 'z'
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 n_randoms_catalogs = 4
 
-gaia_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9.fits'
-gaia_decam_mags_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18_dr9-predict_decam.fits'
+gaia_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_dr9.fits'
+gaia_decam_mags_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_predict_decam_dr9.fits'
 
 # randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 gaia_columns = ['RA', 'DEC', 'PHOT_G_MEAN_MAG', 'PHOT_G_MEAN_FLUX_OVER_ERROR']

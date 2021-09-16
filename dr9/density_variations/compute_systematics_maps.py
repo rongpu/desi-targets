@@ -23,8 +23,13 @@ elif field=='north':
 
 min_nobs = 2
 # maskbits = sorted([1, 13])
-maskbits = sorted([1, 11, 12, 13])
+# maskbits = sorted([1, 11, 12, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
+
+maskbits = []
+apply_lrgmask = True
+if apply_lrgmask:
+    lrgmask = '_lrgmask_v1'
 
 n_randoms_catalogs = 8
 

@@ -16,7 +16,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 allwise_path = '/global/cfs/cdirs/desi/users/rongpu/useful/unwise_bitmask_bright_stars/w1_bright-2mass.fits.gz'
-output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/w1_bright-2mass-dr9.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/w1_bright-2mass-dr9.fits'
 
 search_radius = 1.5 * 3600.
 

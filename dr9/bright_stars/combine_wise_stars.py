@@ -10,11 +10,11 @@ from astropy.table import Table, vstack, hstack
 import fitsio
 # from astropy.io import fits
 
-t1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/w1_bright-2mass-dr9.fits', columns=['RA', 'DEC', 'W1MPRO']))
-t2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/w1_bright-13.3-dr9.fits', columns=['RA', 'DEC', 'W1MPRO']))
+t1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/w1_bright-2mass-dr9.fits', columns=['RA', 'DEC', 'W1MPRO']))
+t2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/w1_bright-13.3-dr9.fits', columns=['RA', 'DEC', 'W1MPRO']))
 
 mask = t2['W1MPRO']>=9.5
 t2 = t2[mask]
 
 cat = vstack([t1, t2])
-cat.write('/global/cfs/cdirs/desi/users/rongpu/useful/w1_bright-2mass-13.3-dr9.fits')
+cat.write('/global/cfs/cdirs/desi/users/rongpu/desi_mask/w1_bright-2mass-13.3-dr9.fits')

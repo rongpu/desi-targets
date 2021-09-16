@@ -15,7 +15,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 tycho2_path = '/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference.fits'
-output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference-dr9.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/tycho2-reference-dr9.fits'
 
 search_radius = 1.5 * 3600.
 

@@ -21,10 +21,10 @@ dr9ref = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/tmp/gaia-mask-dr
 print(len(dr9ref))
 
 # New mask catalog
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference.fits', columns=['mask_mag']))
+cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_dr9.fits', columns=['mask_mag']))
 mask = cat['mask_mag']<10
 idx = np.where(mask)[0]
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference.fits', rows=idx))
+cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_dr9.fits', rows=idx))
 
 
 idx1, idx2, d2d, d_ra, d_dec = search_around(cat['RA'], cat['DEC'], dr9ref['ra'], dr9ref['dec'], search_radius=5.)
@@ -41,5 +41,5 @@ mask = mask_mag-dr9ref['mask_mag'][idx2_unique] > 0.05
 dr9ref_add = dr9ref[idx2_unique[mask]].copy()
 print(len(dr9ref_add))
 
-dr9ref_add.write('/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr9_reference_suppl.fits')
+dr9ref_add.write('/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_reference_suppl_dr9.fits')
 
