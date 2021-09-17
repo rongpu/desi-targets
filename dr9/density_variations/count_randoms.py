@@ -3,8 +3,9 @@
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
-from astropy.table import Table, vstack
+from astropy.table import Table, vstack, hstack
 import fitsio
+from astropy.io import fits
 
 from multiprocessing import Pool
 import healpy as hp
@@ -29,7 +30,9 @@ min_nobs = 2
 maskbits = []
 apply_lrgmask = True
 if apply_lrgmask:
-    lrgmask = '_lrgmask_v1'
+    lrgmask_str = '_lrgmask_v1'
+else:
+    lrgmask_str = ''
 
 n_processes = 32
 
@@ -48,6 +51,8 @@ randoms_paths = randoms_paths[:n_randoms_catalogs]
 print(len(randoms_paths))
 
 randoms_density = 2500
+
+lrgmask_dir = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/lrgmask_v1/randoms'
 
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/{}/counts'.format(resolve)
 
@@ -76,13 +81,25 @@ def count_randoms(randoms_path):
 
     all_exist = True
     for nside in nsides:
-        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask, randoms_index_str))
+        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str, randoms_index_str))
         if not os.path.isfile(output_path):
             all_exist = False
     if all_exist:
         return None
 
-    randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
+    # randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
+    hdu = fits.open(randoms_path)
+    randoms = Table()
+    for col in randoms_columns:
+        randoms[col] = np.copy(hdu[1].data[col])
+
+    if apply_lrgmask:
+        lrgmask_path = os.path.join(lrgmask_dir, os.path.basename(randoms_path).replace('.fits', '-lrgmask_v1.fits'))
+        lrgmask = Table(fitsio.read(lrgmask_path))
+        randoms = hstack([randoms, lrgmask], join_type='exact')
+        mask = randoms['lrg_mask']==0
+        randoms = randoms[mask]
+
     # print(len(randoms))
 
     if fitsio.read_header(randoms_path, ext=1)['DENSITY']!=randoms_density:
@@ -106,7 +123,7 @@ def count_randoms(randoms_path):
         pix_count_all = np.zeros(npix, dtype=int)
         pix_count_all[pix_unique] = pix_count
 
-        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask, randoms_index_str))
+        output_path = os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str), '{}_nside_{}_minobs_{}_maskbits_{}_{}.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str, randoms_index_str))
 
         if not os.path.isdir(os.path.dirname(output_path)):
             try:
@@ -138,7 +155,7 @@ if __name__ == '__main__':
 
         print(nside)
 
-        final_output_path = os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask))
+        final_output_path = os.path.join(output_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
         if os.path.isfile(final_output_path):
             continue
 
@@ -150,7 +167,7 @@ if __name__ == '__main__':
         hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, hp_table['HPXPIXEL'], nest=False, lonlat=True)
         hp_table['n_randoms'] = 0
 
-        output_paths = sorted(glob.glob(os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask), '{}_nside_{}_minobs_{}_maskbits_{}_*.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask))))
+        output_paths = sorted(glob.glob(os.path.join(output_dir, 'minobs_{}_maskbits_{}'.format(min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str), '{}_nside_{}_minobs_{}_maskbits_{}_*.npy'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))))
         print(len(output_paths))
 
         for output_path in output_paths:

@@ -20,8 +20,15 @@ plt.rcParams['image.cmap'] = 'jet'
 
 target_ver_str = '1.0.0'
 
-min_nobs = 1
-maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+min_nobs = 2
+# maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+
+apply_lrgmask = True
+if apply_lrgmask:
+    lrgmask_str = '_lrgmask_v1'
+else:
+    lrgmask_str = ''
 
 randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
@@ -45,7 +52,8 @@ min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 #     print(xnames[index], xlabels[index])
 
 
-for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
+# for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
+for target_class in ['LRG']:
 
     print(target_class)
     target_class = target_class.lower()
@@ -60,22 +68,22 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
 
         field = 'combined'
 
-        plot_dir = os.path.join(top_plot_dir, '{}_{}_minobs_{}_maskbits_{}'.format(target_class, field, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+        plot_dir = os.path.join(top_plot_dir, '{}_{}_minobs_{}_maskbits_{}'.format(target_class, field, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
 
-        density_north = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
-        density_south = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        density_north = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+        density_south = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
         mask = (density_north['DEC']>32.375)
         density_north = density_north[mask]
         mask = ~np.in1d(density_south['HPXPIXEL'], density_north['HPXPIXEL'])
         density = vstack([density_north, density_south[mask]])
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
         maps = maps[maps['n_randoms']>0]
         maps_north = maps.copy()
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
         maps = maps[maps['n_randoms']>0]
         maps_south = maps.copy()
 
@@ -96,7 +104,7 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
 
         maps['density'] = maps['n_targets'] / (pix_area * maps['FRACAREA'])
 
-        plot_path = os.path.join(plot_dir, 'density_{}_{}.png'.format(target_class, nside))
+        plot_path = os.path.join(plot_dir, 'density_{}_{}{}.png'.format(target_class, nside, lrgmask_str))
 
         # if os.path.isfile(plot_path):
         #     continue

@@ -13,9 +13,16 @@ min_nobs = 2
 
 nsides = [64, 128, 256, 512]
 
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/1.0.0/resolve/v1.0'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/1.0.0/resolve/v1.1'
 
-maskbits = [1, 8, 9, 11, 12, 13]
+# maskbits = [1, 8, 9, 11, 12, 13]
+
+maskbits = []
+apply_lrgmask = True
+if apply_lrgmask:
+    lrgmask_str = '_lrgmask_v1'
+else:
+    lrgmask_str = ''
 
 
 def apply_mask(cat, min_nobs, maskbits):
@@ -60,20 +67,25 @@ if __name__ == '__main__':
 
         # Load LRG catalog
         min_nobs_cat = 1
-        cat_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_maskbits_{}_20210723.fits'.format(min_nobs_cat, ''.join([str(tmp) for tmp in maskbits]))
+        # cat_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_maskbits_{}_20210723.fits'.format(min_nobs_cat, ''.join([str(tmp) for tmp in maskbits]))
+        cat_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_20210913.fits'.format(min_nobs_cat)
         cat = Table(fitsio.read(cat_path))
+
+        mask = cat['lrg_mask']==0
+        cat = cat[mask]
 
         mask = apply_mask(cat, min_nobs, maskbits)
         cat = cat[mask]
         
         ############################## photo-z bins ##############################
 
-        for bin_index in range(4):
+        for bin_index in range(1, 5):  # 4 bins
 
-            mask = cat['pz_bin']==bin_index+1
+            mask = cat['pz_bin']==bin_index
 
             for nside in nsides:
-                output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(bin_index+1, field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+                # output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(bin_index, field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+                output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}.fits'.format(bin_index, field, nside, min_nobs))
                 if os.path.isfile(output_path):
                     continue
                 npix = hp.nside2npix(nside)

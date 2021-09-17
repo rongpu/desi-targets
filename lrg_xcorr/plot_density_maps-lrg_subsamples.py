@@ -20,16 +20,23 @@ plt.rcParams.update(params)
 
 plt.rcParams['image.cmap'] = 'jet'
 
-weighted = False
+weighted = True
 
 min_nobs = 2
-maskbits = [1, 8, 9, 11, 12, 13]
+# maskbits = [1, 8, 9, 11, 12, 13]
+
+maskbits = []
+apply_lrgmask = True
+if apply_lrgmask:
+    lrgmask_str = '_lrgmask_v1'
+else:
+    lrgmask_str = ''
 
 randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/lrg_xcorr/density_maps/1.0.0/resolve/v1.0'
+target_densities_dir = '/Users/rongpu/Documents/Data/lrg_xcorr/density_maps/1.0.0/resolve/v1.1'
 
-top_plot_dir = '/Users/rongpu/Documents/Work/DESI/lrg_xcorr/imaging_sys/density_maps/v1.0'
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/lrg_xcorr/imaging_sys/density_maps/v1.1'
 
 if weighted:
     target_densities_dir = os.path.join(target_densities_dir, 'linear_weights')
@@ -70,18 +77,20 @@ for bin_index in range(1, 5):
             weighted_str = '-lw'
         else:
             weighted_str = ''
-        density_north = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
-        density_south = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
+        # density_north = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
+        # density_south = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
+        density_north = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}{}.fits'.format(bin_index, 'north', nside, min_nobs, weighted_str)))
+        density_south = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}{}.fits'.format(bin_index, 'south', nside, min_nobs, weighted_str)))
         mask = (density_north['DEC']>32.375)
         density_north = density_north[mask]
         mask = ~np.in1d(density_south['HPXPIXEL'], density_north['HPXPIXEL'])
         density = vstack([density_north, density_south[mask]])
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
         maps = maps[maps['n_randoms']>0]
         maps_north = maps.copy()
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
         maps = maps[maps['n_randoms']>0]
         maps_south = maps.copy()
 

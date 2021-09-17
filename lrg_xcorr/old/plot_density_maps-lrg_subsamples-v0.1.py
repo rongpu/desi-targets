@@ -25,7 +25,7 @@ maskbits = [1, 8, 9, 11, 12, 13]
 
 randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/lrg_xcorr/density_maps/1.0.0/resolve'
+target_densities_dir = '/Users/rongpu/Documents/Data/lrg_xcorr/density_maps/1.0.0/resolve'
 
 top_plot_dir = '/Users/rongpu/Documents/Work/DESI/lrg_xcorr/imaging_sys/density_maps/v0.1'
 

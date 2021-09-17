@@ -10,8 +10,17 @@ import fitsio
 
 import healpy as hp
 
-min_nobs = 1
-maskbits_list = [sorted([1, 8, 9, 11, 12, 13]), sorted([1, 11, 12, 13]), sorted([1, 13])]
+min_nobs = 2
+
+# maskbits_list = [sorted([1, 8, 9, 11, 12, 13]), sorted([1, 11, 12, 13]), sorted([1, 13])]
+
+maskbits_list = [[]]
+apply_lrgmask = True
+
+if apply_lrgmask:
+    lrgmask_str = '_lrgmask_v1'
+else:
+    lrgmask_str = ''
 
 randoms_ver_str = '0.49.0'
 
@@ -32,13 +41,13 @@ for maskbits in maskbits_list:
 
         for field in ['north', 'south']:
 
-            output_path = os.path.join(randoms_combined_dir, 'pixmap_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])))
+            output_path = os.path.join(randoms_combined_dir, 'pixmap_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
             if os.path.isfile(output_path):
                 continue
 
-            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
             maps = maps[maps['n_randoms']>0]
-            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
             maps1.remove_columns(['RA', 'DEC'])
             maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
             if not np.all(np.diff(maps['HPXPIXEL'])>0):
