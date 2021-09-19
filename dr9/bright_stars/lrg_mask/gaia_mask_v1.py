@@ -49,10 +49,11 @@ suppl = suppl[gaia_columns]
 gaia = vstack([gaia, suppl], join_type='exact')
 
 mask = gaia['mask_mag']<max_mag
-gaia = gaia[mask]
-print(len(gaia))
 
-gaia['radius_south'] = f_radius_south(gaia['mask_mag'])
-gaia['radius_north'] = f_radius_north(gaia['mask_mag'])
+gaia['radius_south'] = 0.
+gaia['radius_north'] = 0.
+
+gaia['radius_south'][mask] = f_radius_south(gaia['mask_mag'][mask])
+gaia['radius_north'][mask] = f_radius_north(gaia['mask_mag'][mask])
 
 gaia.write(output_path)
