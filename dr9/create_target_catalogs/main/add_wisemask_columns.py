@@ -1,6 +1,7 @@
 # Add WISEMASK_W1 and WISEMASK_W2
 # Example:
 # srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python add_wisemask_columns.py LRG south
+# python add_wisemask_columns.py LRG south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -46,9 +47,18 @@ def is_in_box(objs, radecbox, ra_col='RA', dec_col='DEC'):
 
 n_processes = 32
 
+# survey = 'main'
+# survey = 'sv1'
+survey = 'sv3'
+
 sweep_columns = ['WISEMASK_W1', 'WISEMASK_W2']
 
-data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
+if survey=='main':
+    data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
+elif survey=='sv1':
+    data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.49.0'
+elif survey=='sv3':
+    data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
 # stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
 
 # target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
@@ -59,8 +69,16 @@ field = field.lower()
 
 print(target_class, field)
 
-cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_basic.fits'.format(target_class.lower(), field))
-output_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_wisemask.fits'.format(target_class.lower(), field))
+if survey=='main':
+    cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_basic.fits'.format(target_class.lower(), field))
+    output_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_wisemask.fits'.format(target_class.lower(), field))
+elif survey=='sv1':
+    cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_basic.fits'.format(survey, target_class.lower(), field))
+    output_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.49.0_wisemask.fits'.format(survey, target_class.lower(), field))
+elif survey=='sv3':
+    cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_basic.fits'.format(survey, target_class.lower(), field))
+    output_path = os.path.join(data_dir, 'dr9_{}_{}_{}_0.57.0_wisemask.fits'.format(survey, target_class.lower(), field))
+
 
 if os.path.isfile(output_path):
     sys.exit('File already exist: '+output_path)
@@ -99,9 +117,15 @@ if __name__ == '__main__':
     print('Start!')
     time_start = time.time()
 
-    # start multiple worker processes
-    with Pool(processes=n_processes) as pool:
-        res = pool.map(get_sweep_columns, np.unique(sweep_fn_list))
+    # # start multiple worker processes
+    # with Pool(processes=n_processes) as pool:
+    #     res = pool.map(get_sweep_columns, np.unique(sweep_fn_list))
+
+    sweep_fn_list = np.unique(sweep_fn_list)
+    res = []
+    for index, sweep_fn in enumerate(sweep_fn_list):
+        print(index, len(sweep_fn_list))
+        res.append(get_sweep_columns(sweep_fn))
 
     # Remove None elements from the list
     for index in range(len(res)-1, -1, -1):
@@ -120,6 +144,6 @@ if __name__ == '__main__':
         raise ValueError('different targetid')
     cat_more.remove_column('TARGETID')
 
-    cat_more.write(output_path, overwrite=True)
+    cat_more.write(output_path, overwrite=False)
 
     print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

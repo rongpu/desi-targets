@@ -1,4 +1,6 @@
-# Subsample version 1.0
+# version 1.1
+# This script assumes that the "resolve" catalogs are used
+# The overlaping pixels are combined by weighted averaging
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -20,7 +22,7 @@ plt.rcParams.update(params)
 
 plt.rcParams['image.cmap'] = 'jet'
 
-weighted = True
+weighted = False
 
 min_nobs = 2
 # maskbits = [1, 8, 9, 11, 12, 13]
@@ -80,31 +82,29 @@ for bin_index in range(1, 5):
         # density_north = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
         # density_south = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}_maskbits_{}{}.fits'.format(bin_index, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]), weighted_str)))
         density_north = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}{}.fits'.format(bin_index, 'north', nside, min_nobs, weighted_str)))
+        maps_north = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+        maps_north = maps_north[maps_north['n_randoms']>0]
+        maps_north = join(maps_north, density_north[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
+
         density_south = Table.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}{}.fits'.format(bin_index, 'south', nside, min_nobs, weighted_str)))
-        mask = (density_north['DEC']>32.375)
-        density_north = density_north[mask]
-        mask = ~np.in1d(density_south['HPXPIXEL'], density_north['HPXPIXEL'])
-        density = vstack([density_north, density_south[mask]])
+        maps_south = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+        maps_south = maps_south[maps_south['n_randoms']>0]
+        maps_south = join(maps_south, density_south[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        maps = maps[maps['n_randoms']>0]
-        maps_north = maps.copy()
+        # Combine north and south
+        pix_overlap = np.intersect1d(maps_north['HPXPIXEL'], maps_south['HPXPIXEL'])
+        maps_north_overlap = maps_north[np.in1d(maps_north['HPXPIXEL'], pix_overlap)].copy()
+        maps_north_overlap.sort('HPXPIXEL')
+        maps_south_overlap = maps_south[np.in1d(maps_south['HPXPIXEL'], pix_overlap)].copy()
+        maps_south_overlap.sort('HPXPIXEL')
+        maps_overlap = maps_north_overlap.copy()
+        maps_overlap['n_targets'] = maps_north_overlap['n_targets'] + maps_south_overlap['n_targets']
+        maps_overlap['n_randoms'] = maps_north_overlap['n_randoms'] + maps_south_overlap['n_randoms']
+        maps_overlap['FRACAREA'] = maps_north_overlap['FRACAREA'] + maps_south_overlap['FRACAREA']
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        maps = maps[maps['n_randoms']>0]
-        maps_south = maps.copy()
-
-        mask = (maps_north['DEC']>32.375)
-        maps_north = maps_north[mask]
-        mask = ~np.in1d(maps_south['HPXPIXEL'], maps_north['HPXPIXEL'])
-        maps = vstack([maps_north, maps_south[mask]])
-
-        maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
-
-        print(len(maps))
-
-        area = np.sum(maps['FRACAREA'])*pix_area
-        print('Area = {:.1f} sq deg'.format(area))
+        maps_north = maps_north[~np.in1d(maps_north['HPXPIXEL'], pix_overlap)]
+        maps_south = maps_south[~np.in1d(maps_south['HPXPIXEL'], pix_overlap)]
+        maps = vstack([maps_north, maps_south, maps_overlap], join_type='exact')
 
         mask = maps['FRACAREA']>min_pix_frac
         maps = maps[mask]

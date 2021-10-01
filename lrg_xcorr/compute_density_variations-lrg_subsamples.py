@@ -1,4 +1,4 @@
-# Subsample version 1.0
+# version 1.1
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -65,11 +65,19 @@ if __name__ == '__main__':
 
     for field in ['north', 'south']:
 
+        if field=='south':
+            photsys = 'S'
+        elif field=='north':
+            photsys = 'N'
+
         # Load LRG catalog
         min_nobs_cat = 1
         # cat_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_maskbits_{}_20210723.fits'.format(min_nobs_cat, ''.join([str(tmp) for tmp in maskbits]))
         cat_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/main_lrg_minobs_{}_20210913.fits'.format(min_nobs_cat)
         cat = Table(fitsio.read(cat_path))
+
+        mask = cat['PHOTSYS']==photsys
+        cat = cat[mask]
 
         mask = cat['lrg_mask']==0
         cat = cat[mask]

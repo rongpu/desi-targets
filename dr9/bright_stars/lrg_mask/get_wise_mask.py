@@ -15,6 +15,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 
+time_start = time.time()
+
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/dev'
 
 fn = str(sys.argv[1])
@@ -90,3 +92,4 @@ data = {}
 data['wise_mask'] = mask_remove.copy()
 np.savez_compressed(output_path, **data)
 
+print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

@@ -18,7 +18,7 @@ new_mask_dir = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/dev'
 
 randoms_output_dir = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/lrgmask_v1/randoms'
 
-########################################## LRG catalog ##########################################
+########################################## Main LRG catalog ##########################################
 
 for field in ['south', 'north']:
     cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_basic.fits'.format(field)))
@@ -65,6 +65,102 @@ for field in ['south', 'north']:
 
     cat = cat[['lrg_mask']]
     cat.write('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve/dr9_lrg_{}_1.0.0_lrgmask_v1.fits'.format(field), overwrite=True)
+
+########################################## SV1 LRG catalog ##########################################
+
+for field in ['south', 'north']:
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.49.0/dr9_sv1_lrg_{}_0.49.0_basic.fits'.format(field)))
+    cat_wisemask = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.49.0/dr9_sv1_lrg_{}_0.49.0_wisemask.fits'.format(field)))
+    wmask = np.load(os.path.join(new_mask_dir, 'dr9_sv1_lrg_{}_0.49.0_basic-wisemask.npz'.format(field)))
+    gmask = np.load(os.path.join(new_mask_dir, 'dr9_sv1_lrg_{}_0.49.0_basic-gaiamask.npz'.format(field)))
+
+    cat = hstack([cat, cat_wisemask], join_type='exact')
+    cat['wise_mask'] = wmask['wise_mask']
+    cat['gaia_mask'] = gmask['gaia_mask']
+    cat['gaia_bright_mask'] = gmask['gaia_bright_mask']
+
+    # Apply the targeting maskbits
+    mask_ts = np.zeros(len(cat), dtype=bool)
+    for bit in maskbits:
+        mask_ts |= (cat['MASKBITS'] & 2**bit)>0
+    print(np.sum(mask_ts), np.sum(mask_ts)/len(mask_ts))
+
+    # Apply the unWISE maskbits
+    mask_unwise = np.zeros(len(cat), dtype=bool)
+    for bit in unwise_maskbits:
+        mask_unwise |= (cat['WISEMASK_W1'] & 2**bit)>0
+    wise_mask = cat['wise_mask'] | mask_unwise
+    new_mask = wise_mask | cat['gaia_mask']
+
+    maskbits = [1, 12, 13]
+
+    cat['lrg_mask'] = np.zeros(len(cat), dtype=np.int16)
+
+    # Bit 0: unWISE maskbits
+    cat['lrg_mask'][mask_unwise] += 2**0
+
+    # Bit 1: WISE mask
+    cat['lrg_mask'][cat['wise_mask']] += 2**1
+
+    # Bit 2: GAIA mask
+    cat['lrg_mask'][cat['gaia_mask']] += 2**2
+
+    # Bit 3: GAIA bright mask
+    cat['lrg_mask'][cat['gaia_bright_mask']] += 2**3
+
+    # Bit 4: Target selection mask
+    cat['lrg_mask'][mask_ts] += 2**4
+
+    cat = cat[['lrg_mask']]
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.49.0/dr9_sv1_lrg_{}_0.49.0_lrgmask_v1.fits'.format(field), overwrite=True)
+
+########################################## SV3 LRG catalog ##########################################
+
+for field in ['south', 'north']:
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0/dr9_sv3_lrg_{}_0.57.0_basic.fits'.format(field)))
+    cat_wisemask = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0/dr9_sv3_lrg_{}_0.57.0_wisemask.fits'.format(field)))
+    wmask = np.load(os.path.join(new_mask_dir, 'dr9_sv3_lrg_{}_0.57.0_basic-wisemask.npz'.format(field)))
+    gmask = np.load(os.path.join(new_mask_dir, 'dr9_sv3_lrg_{}_0.57.0_basic-gaiamask.npz'.format(field)))
+
+    cat = hstack([cat, cat_wisemask], join_type='exact')
+    cat['wise_mask'] = wmask['wise_mask']
+    cat['gaia_mask'] = gmask['gaia_mask']
+    cat['gaia_bright_mask'] = gmask['gaia_bright_mask']
+
+    # Apply the targeting maskbits
+    mask_ts = np.zeros(len(cat), dtype=bool)
+    for bit in maskbits:
+        mask_ts |= (cat['MASKBITS'] & 2**bit)>0
+    print(np.sum(mask_ts), np.sum(mask_ts)/len(mask_ts))
+
+    # Apply the unWISE maskbits
+    mask_unwise = np.zeros(len(cat), dtype=bool)
+    for bit in unwise_maskbits:
+        mask_unwise |= (cat['WISEMASK_W1'] & 2**bit)>0
+    wise_mask = cat['wise_mask'] | mask_unwise
+    new_mask = wise_mask | cat['gaia_mask']
+
+    maskbits = [1, 12, 13]
+
+    cat['lrg_mask'] = np.zeros(len(cat), dtype=np.int16)
+
+    # Bit 0: unWISE maskbits
+    cat['lrg_mask'][mask_unwise] += 2**0
+
+    # Bit 1: WISE mask
+    cat['lrg_mask'][cat['wise_mask']] += 2**1
+
+    # Bit 2: GAIA mask
+    cat['lrg_mask'][cat['gaia_mask']] += 2**2
+
+    # Bit 3: GAIA bright mask
+    cat['lrg_mask'][cat['gaia_bright_mask']] += 2**3
+
+    # Bit 4: Target selection mask
+    cat['lrg_mask'][mask_ts] += 2**4
+
+    cat = cat[['lrg_mask']]
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0/dr9_sv3_lrg_{}_0.57.0_lrgmask_v1.fits'.format(field), overwrite=True)
 
 ########################################## Randoms ##########################################
 

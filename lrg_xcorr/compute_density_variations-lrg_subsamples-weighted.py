@@ -1,4 +1,5 @@
-# Subsample version 1.0
+# version 1.1
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_density_variations-lrg_subsamples-weighted.py
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
