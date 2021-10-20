@@ -122,8 +122,6 @@ if __name__ == '__main__':
     mask = apply_mask(cat, min_nobs, maskbits)
     cat = cat[mask]
 
-
-
     for nside in nsides:
 
         output_path = os.path.join(output_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))

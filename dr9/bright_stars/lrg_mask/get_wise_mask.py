@@ -10,7 +10,6 @@ from astropy.table import Table, vstack, hstack
 import fitsio
 from astropy.io import fits
 
-from scipy.interpolate import interp1d
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 

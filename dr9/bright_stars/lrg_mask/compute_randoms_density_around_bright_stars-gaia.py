@@ -30,6 +30,8 @@ def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
     return bins, density, count
 
 
+time_start = time.time()
+
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 lrgmask_dir = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/lrgmask_v1/randoms'
 n_randoms_catalogs = 4
@@ -162,3 +164,5 @@ data['n_randoms'] = len(randoms)
 
 save_path = '/global/u2/r/rongpu/notebooks/desi_mask/data/lrgmask_v1/density_rand_gaia_{}_minobs_{}_lrgmask_{}.npy'.format(field, min_nobs, ''.join([str(tmp) for tmp in lrgmask_bits]))
 np.save(save_path, data)
+
+print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

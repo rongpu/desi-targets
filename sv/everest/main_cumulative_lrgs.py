@@ -14,19 +14,22 @@ import fitsio
 coadd_type = 'cumulative'
 done = True
 
-tiles = Table.read('/global/cfs/cdirs/desi/survey/ops/surveyops/trunk/ops/tiles-main.ecsv')
-print(len(tiles))
-mask = tiles['PROGRAM']=='DARK'
+tiles = Table.read('/global/cfs/cdirs/desi/users/rongpu/spectro/everest/misc/tiles-specstatus-20211013.ecsv')
+print(len(tiles), len(np.unique(tiles['TILEID'])))
+
+mask = tiles['SURVEY']=='main'
+mask &= tiles['FAPRGRM']=='dark'
 tiles = tiles[mask]
 print(len(tiles))
 
 if done:
-    mask = tiles['STATUS']=='done'
+    # mask = tiles['OBSSTATUS']=='obsend'
+    mask = tiles['QA']=='good'
     tiles = tiles[mask]
     print(len(tiles))
 
 columns_1 = ['TARGETID', 'CHI2', 'Z', 'ZERR', 'ZWARN', 'SPECTYPE', 'DELTACHI2']
-columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE']
+columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE', 'FIBERASSIGN_X', 'FIBERASSIGN_Y']
 columns_4 = ['TARGETID', 'TSNR2_ELG', 'TSNR2_BGS', 'TSNR2_QSO', 'TSNR2_LRG']
 
 tileid_list = tiles['TILEID']
@@ -78,6 +81,6 @@ cat = join(cat, lrg, keys='TARGETID')
 #############################################################################
 
 if done:
-    cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/everest/main_done_{}_lrg.fits'.format(coadd_type), overwrite=False)
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/everest/main_done_{}_lrg.fits'.format(coadd_type), overwrite=True)
 else:
-    cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/everest/main_{}_lrg.fits'.format(coadd_type), overwrite=False)
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/everest/main_{}_lrg.fits'.format(coadd_type), overwrite=True)
