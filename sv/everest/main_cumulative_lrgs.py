@@ -1,4 +1,4 @@
-# Create combined main perexp LRG catalog
+# Create combined main cumulative LRG catalog
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc

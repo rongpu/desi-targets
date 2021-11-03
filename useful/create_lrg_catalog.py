@@ -1,4 +1,4 @@
-# Create the catalog for main LRGs
+# Create the target catalog for main LRGs
 # The resulting catalog should be the same as Adam's official LRG catalog
 
 # srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python create_lrg_catalog.py

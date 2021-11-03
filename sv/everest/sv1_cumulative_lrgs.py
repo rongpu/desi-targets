@@ -44,7 +44,9 @@ for tileid in tileid_list:
     print(tileid)
 
     fn_list = sorted(glob.glob(os.path.join(data_dir, str(tileid), '*/redrock-*.fits')))
+
     for fn in fn_list:
+
         tmp1 = Table(fitsio.read(fn, ext=1, columns=columns_1))
         tmp2 = Table(fitsio.read(fn, ext=2, columns=columns_2))
         tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
@@ -56,6 +58,11 @@ for tileid in tileid_list:
         
         mask = tmp['SV1_DESI_TARGET'] & 2**0 > 0
         tmp = tmp[mask]
+
+        if coadd_type in ['1x_depth', '4x_depth', 'low_speed']:
+            str_tmp = os.path.join(data_dir, str(tileid)) + '/'
+            subset = int(fn[len(str_tmp):][:fn[len(str_tmp):].find('/redrock')])
+            tmp['subset']==subset
         
         cat_stack.append(tmp)
 
