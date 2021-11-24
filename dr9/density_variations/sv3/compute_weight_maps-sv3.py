@@ -72,7 +72,7 @@ def apply_mask(randoms, min_nobs, maskbits):
     return mask
 
 
-def get_systeamtics(pix_idx):
+def get_systematics(pix_idx):
 
     pix_list = pix_unique[pix_idx]
 
@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
         # start multiple worker processes
         with Pool(processes=n_processes) as pool:
-            res = pool.map(get_systeamtics, pix_idx_split)
+            res = pool.map(get_systematics, pix_idx_split)
 
         hp_table = vstack(res)
         hp_table.sort('HPXPIXEL')

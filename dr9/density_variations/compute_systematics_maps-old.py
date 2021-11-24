@@ -65,7 +65,7 @@ def apply_mask(randoms, min_nobs, maskbits):
     return mask
 
 
-def get_systeamtics(pix_list):
+def get_systematics(pix_list):
 
     hp_table = Table()
     hp_table['hp_idx'] = pix_list
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
         # start multiple worker processes
         with Pool(processes=n_processes) as pool:
-            res = pool.map(get_systeamtics, pix_unique_split)
+            res = pool.map(get_systematics, pix_unique_split)
 
         hp_table = vstack(res)
         hp_table.sort('hp_idx')

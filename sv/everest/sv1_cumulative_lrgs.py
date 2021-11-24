@@ -62,7 +62,7 @@ for tileid in tileid_list:
         if coadd_type in ['1x_depth', '4x_depth', 'low_speed']:
             str_tmp = os.path.join(data_dir, str(tileid)) + '/'
             subset = int(fn[len(str_tmp):][:fn[len(str_tmp):].find('/redrock')])
-            tmp['subset']==subset
+            tmp['subset'] = subset
         
         cat_stack.append(tmp)
 

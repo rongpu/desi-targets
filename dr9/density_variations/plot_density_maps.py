@@ -20,15 +20,9 @@ plt.rcParams['image.cmap'] = 'jet'
 
 target_ver_str = '1.0.0'
 
-min_nobs = 2
+min_nobs = 1
 # maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
 maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
-
-apply_lrgmask = True
-if apply_lrgmask:
-    lrgmask_str = '_lrgmask_v1'
-else:
-    lrgmask_str = ''
 
 randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
 randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
@@ -52,8 +46,12 @@ min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 #     print(xnames[index], xlabels[index])
 
 
-# for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
-for target_class in ['LRG']:
+for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
+
+    if target_class=='LRG':
+        lrgmask_str = '_lrgmask_v1'
+    else:
+        lrgmask_str = ''
 
     print(target_class)
     target_class = target_class.lower()
@@ -72,27 +70,46 @@ for target_class in ['LRG']:
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
 
-        density_north = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        density_south = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, 'south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        mask = (density_north['DEC']>32.375)
-        density_north = density_north[mask]
-        mask = ~np.in1d(density_south['HPXPIXEL'], density_north['HPXPIXEL'])
-        density = vstack([density_north, density_south[mask]])
+        for field in ['north', 'south']:
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('north', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        maps = maps[maps['n_randoms']>0]
-        maps_north = maps.copy()
+            density = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps = maps[maps['n_randoms']>0]
+            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps1.remove_columns(['RA', 'DEC'])
+            maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
+            maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
 
-        maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format('south', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
-        maps = maps[maps['n_randoms']>0]
-        maps_south = maps.copy()
+            # # Load stellar density map
+            # stardens = np.load('/Users/rongpu/Documents/Data/desi_lrg_selection/dr7/healpix_maps/pixweight-dr7.1-0.22.0_stardens_{}_ring.npy'.format(nside))
+            # maps['stardens'] = stardens[maps['HPXPIXEL']]
+            # maps['stardens_log'] = np.log10(maps['stardens'])
 
-        mask = (maps_north['DEC']>32.375)
-        maps_north = maps_north[mask]
-        mask = ~np.in1d(maps_south['HPXPIXEL'], maps_north['HPXPIXEL'])
-        maps = vstack([maps_north, maps_south[mask]])
+            if field=='north':
+                maps_north = maps.copy()
+            else:
+                maps_south = maps.copy()
 
-        maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
+        ########## Combine the two maps; proper handling of overlapping pixels ##########
+
+        pix_overlap = np.intersect1d(maps_north['HPXPIXEL'], maps_south['HPXPIXEL'])
+        mask = np.in1d(maps_north['HPXPIXEL'], pix_overlap)
+        maps_overlap_north = maps_north[mask]
+        maps_north = maps_north[~mask]
+        mask = np.in1d(maps_south['HPXPIXEL'], pix_overlap)
+        maps_overlap_south = maps_south[mask]
+        maps_south = maps_south[~mask]
+
+        maps_overlap_north.sort('HPXPIXEL')
+        maps_overlap_south.sort('HPXPIXEL')
+
+        maps_overlap = maps_overlap_south.copy()
+        maps_overlap['n_targets'] = maps_overlap_north['n_targets'] + maps_overlap_south['n_targets']
+        maps_overlap['FRACAREA'] = maps_overlap_north['FRACAREA'] + maps_overlap_south['FRACAREA']
+
+        maps = vstack([maps_north, maps_south, maps_overlap])
+
+        ######################################################################
 
         print(len(maps))
 

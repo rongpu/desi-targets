@@ -66,7 +66,7 @@ def apply_mask(cat, min_nobs, maskbits):
     return mask
 
 
-def get_systeamtics(pix_list):
+def get_systematics(pix_list):
 
     hp_table = Table()
     hp_table['HPXPIXEL'] = pix_list
@@ -132,7 +132,7 @@ if __name__ == '__main__':
         npix = hp.nside2npix(nside)
         pix_allobj = hp.pixelfunc.ang2pix(nside, cat['RA'], cat['DEC'], lonlat=True)
         pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
-        hp_table = get_systeamtics(pix_unique)
+        hp_table = get_systematics(pix_unique)
         hp_table['n_targets'] = pix_count
         hp_table.write(output_path)
 
