@@ -1,3 +1,5 @@
+# Compute per-object linear weights
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -15,79 +17,48 @@ def get_weights(cat, weights_path, separate_des=False):
     weights = np.zeros(len(cat))
 
     if separate_des==False:  # Same linear coefficients for DECaLS and DES
+        regions = ['north', 'south']
+    else:
+        regions = ['BASS+MzLS', 'DECaLS', 'DES']
 
-        for field in ['north', 'south']:
+    for region in regions:
 
-            if field=='south':
-                photsys = 'S'
-            elif field=='north':
-                photsys = 'N'
+        if region=='north' or region=='BASS+MzLS':
+            photsys = 'N'
+        else:
+            photsys = 'S'
+        
+        xnames_fit = list(linear_coeffs[region].keys())
+        xnames_fit.remove('intercept')
 
-            xnames_fit = list(linear_coeffs[field].keys())
-            xnames_fit.remove('intercept')
+        # create array of coefficients, with the first coefficient being the intercept
+        coeffs = np.array([linear_coeffs[region]['intercept']]+[linear_coeffs[region][xname] for xname in xnames_fit])
 
-            # create array of coefficients, with the first coefficient being the intercept
-            coeffs = np.array([linear_coeffs[field]['intercept']]+[linear_coeffs[field][xname] for xname in xnames_fit])
+        mask = cat['PHOTSYS']==photsys
 
-            mask = cat['PHOTSYS']==photsys
+        if separate_des and photsys=='S':
+            # See https://github.com/desihub/desitarget/blob/f39455769628b7982fc18c1e2668a6d1161a3e87/py/desitarget/cuts.py#L1874
+            is_des = (cat['NOBS_G'] > 4) & (cat['NOBS_R'] > 4) & (cat['NOBS_Z'] > 4) \
+                & ((cat['RA'] >= 320) | (cat['RA'] <= 100)) & (cat['DEC'] <= 10)
+            if region=='DECaLS':
+                mask &= (~is_des)
+            elif region=='DES':
+                mask &= is_des
 
-            # Assign zero weights to cat with invalid imaging properties
-            # (their fraction should be negligibly small)
-            mask_bad = np.full(len(cat), False)
-            for col in xnames_fit:
-                mask_bad |= ~np.isfinite(cat[col])
-            if np.sum(mask_bad)!=0:
-                print('{} invalid cat'.format(np.sum(mask_bad)))
-            mask &= (~mask_bad)
+        # Assign zero weights to objects with invalid imaging properties
+        # (their fraction should be negligibly small)
+        mask_bad = np.full(len(cat), False)
+        for col in xnames_fit:
+            mask_bad |= ~np.isfinite(cat[col])
+        if np.sum(mask_bad)!=0:
+            print('{} invalid objects'.format(np.sum(mask_bad)))
+        mask &= (~mask_bad)
 
-            data = np.column_stack([cat[mask][xname] for xname in xnames_fit])
-            # create 2-D array of imaging properties, with the first columns being unity
-            data1 = np.insert(data, 0, 1., axis=1)
-            # wt = coeff0 + coeff1 * rand['EBV'] + coeff2 * rand['PSFSIZE_G'] + ...
-            weights[mask] = np.dot(coeffs, data1.T)
-
-    else:  # Different linear coefficients for DECaLS and DES
-
-        for region in ['BASS+MzLS', 'DECaLS', 'DES']:
-
-            if region=='BASS+MzLS':
-                field = 'north'
-                photsys = 'N'
-            else:
-                field = 'south'
-                photsys = 'S'
-
-            xnames_fit = list(linear_coeffs[region].keys())
-            xnames_fit.remove('intercept')
-
-            # create array of coefficients, with the first coefficient being the intercept
-            coeffs = np.array([linear_coeffs[region]['intercept']]+[linear_coeffs[region][xname] for xname in xnames_fit])
-
-            mask = cat['PHOTSYS']==photsys
-
-            if field=='south':
-                # See https://github.com/desihub/desitarget/blob/f39455769628b7982fc18c1e2668a6d1161a3e87/py/desitarget/cuts.py#L1874
-                is_des = (cat['NOBS_G'] > 4) & (cat['NOBS_R'] > 4) & (cat['NOBS_Z'] > 4) \
-                    & ((cat['RA'] >= 320) | (cat['RA'] <= 100)) &  (cat['DEC'] <= 10)
-                if region=='DECaLS':
-                    mask &= (~is_des)
-                elif region=='DES':
-                    mask &= is_des
-
-            # Assign zero weights to cat with invalid imaging properties
-            # (their fraction should be negligibly small)
-            mask_bad = np.full(len(cat), False)
-            for col in xnames_fit:
-                mask_bad |= ~np.isfinite(cat[col])
-            if np.sum(mask_bad)!=0:
-                print('{} invalid cat'.format(np.sum(mask_bad)))
-            mask &= (~mask_bad)
-
-            data = np.column_stack([cat[mask][xname] for xname in xnames_fit])
-            # create 2-D array of imaging properties, with the first columns being unity
-            data1 = np.insert(data, 0, 1., axis=1)
-            # wt = coeff0 + coeff1 * rand['EBV'] + coeff2 * rand['PSFSIZE_G'] + ...
-            weights[mask] = np.dot(coeffs, data1.T)
+        data = np.column_stack([cat[mask][xname] for xname in xnames_fit])
+        # create 2-D array of imaging properties, with the first columns being unity
+        data1 = np.insert(data, 0, 1., axis=1)
+        # wt = coeff0 + coeff1 * rand['EBV'] + coeff2 * rand['PSFSIZE_G'] + ...
+        weights[mask] = np.dot(coeffs, data1.T)
 
     return weights
 
@@ -104,7 +75,7 @@ columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
 
 # cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns))
 cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns,
-                           rows=np.arange(int(1e6))))
+                        rows=np.arange(int(1e6))))
 
 mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
 cat = cat[mask]
