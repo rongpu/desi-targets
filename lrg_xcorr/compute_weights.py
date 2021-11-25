@@ -15,32 +15,38 @@ def get_weights(cat, weights_path, bin_index):
     with open(weights_path, "r") as f:
         linear_coeffs = yaml.safe_load(f)
 
-    # Assign zero weights to objects with invalid imaging properties
-    # (their fraction should be negligibly small)
-    mask_bad = np.full(len(cat), False)
-    xnames_fit = list(linear_coeffs['south_bin_1'].keys())
-    xnames_fit.remove('intercept')
-    for col in xnames_fit:
-        mask_bad |= ~np.isfinite(cat[col])
-    if np.sum(mask_bad)!=0:
-        print('{} invalid objects'.format(np.sum(mask_bad)))
-
     weights = np.zeros(len(cat))
 
-    for field in ['north', 'south']:
+    regions = ['north', 'south']
 
-        if field=='south':
-            photsys = 'S'
-        elif field=='north':
+    for region in regions:
+
+        if region=='north' or region=='BASS+MzLS':
             photsys = 'N'
+        else:
+            photsys = 'S'
+        
+        bin_str = '{}_bin_{}'.format(region, bin_index)
 
-        bin_str = '{}_bin_{}'.format(field, bin_index)
+        xnames_fit = list(linear_coeffs[bin_str].keys())
+        xnames_fit.remove('intercept')
+
+        # Assign nan weights to objects with invalid imaging properties
+        # (their fraction should be negligibly small)
+        if region==regions[0]:
+            mask_bad = np.full(len(cat), False)
+            for col in xnames_fit:
+                mask_bad |= ~np.isfinite(cat[col])
+            if np.sum(mask_bad)!=0:
+                print('{} invalid objects'.format(np.sum(mask_bad)))
+            weights[mask_bad] = np.nan
 
         # create array of coefficients, with the first coefficient being the intercept
         coeffs = np.array([linear_coeffs[bin_str]['intercept']]+[linear_coeffs[bin_str][xname] for xname in xnames_fit])
 
         mask = cat['PHOTSYS']==photsys
         mask &= (~mask_bad)
+
         data = np.column_stack([cat[mask][xname] for xname in xnames_fit])
         # create 2-D array of imaging properties, with the first columns being unity
         data1 = np.insert(data, 0, 1., axis=1)

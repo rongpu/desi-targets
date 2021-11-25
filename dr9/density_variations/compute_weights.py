@@ -31,10 +31,21 @@ def get_weights(cat, weights_path, separate_des=False):
         xnames_fit = list(linear_coeffs[region].keys())
         xnames_fit.remove('intercept')
 
+        # Assign nan weights to objects with invalid imaging properties
+        # (their fraction should be negligibly small)
+        if region==regions[0]:
+            mask_bad = np.full(len(cat), False)
+            for col in xnames_fit:
+                mask_bad |= ~np.isfinite(cat[col])
+            if np.sum(mask_bad)!=0:
+                print('{} invalid objects'.format(np.sum(mask_bad)))
+            weights[mask_bad] = np.nan
+
         # create array of coefficients, with the first coefficient being the intercept
         coeffs = np.array([linear_coeffs[region]['intercept']]+[linear_coeffs[region][xname] for xname in xnames_fit])
 
         mask = cat['PHOTSYS']==photsys
+        mask &= (~mask_bad)
 
         if separate_des and photsys=='S':
             # See https://github.com/desihub/desitarget/blob/f39455769628b7982fc18c1e2668a6d1161a3e87/py/desitarget/cuts.py#L1874
@@ -44,15 +55,6 @@ def get_weights(cat, weights_path, separate_des=False):
                 mask &= (~is_des)
             elif region=='DES':
                 mask &= is_des
-
-        # Assign zero weights to objects with invalid imaging properties
-        # (their fraction should be negligibly small)
-        mask_bad = np.full(len(cat), False)
-        for col in xnames_fit:
-            mask_bad |= ~np.isfinite(cat[col])
-        if np.sum(mask_bad)!=0:
-            print('{} invalid objects'.format(np.sum(mask_bad)))
-        mask &= (~mask_bad)
 
         data = np.column_stack([cat[mask][xname] for xname in xnames_fit])
         # create 2-D array of imaging properties, with the first columns being unity
