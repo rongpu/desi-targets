@@ -56,39 +56,41 @@ def get_weights(cat, weights_path, bin_index):
     return weights
 
 
-# Prepare the catalog
+# # ##################### Example #####################
 
-min_nobs = 2
-maskbits = sorted([1, 8, 9, 11, 12, 13])
+# # Prepare the catalog
 
-randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
-                   'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
-                   'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
+# min_nobs = 2
+# maskbits = sorted([1, 8, 9, 11, 12, 13])
 
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns))
-# cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns,
-#                            rows=np.arange(int(1e6))))
+# randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
+#                    'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
+#                    'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
 
-mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
-cat = cat[mask]
+# cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns))
+# # cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=randoms_columns,
+# #                            rows=np.arange(int(1e6))))
 
-mask_clean = np.ones(len(cat), dtype=bool)
-for bit in maskbits:
-    mask_clean &= (cat['MASKBITS'] & 2**bit)==0
-cat = cat[mask_clean]
+# mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+# cat = cat[mask]
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    cat['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_G'])))-9) - 3.214*cat['EBV']
-    cat['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_R'])))-9) - 2.165*cat['EBV']
-    cat['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_Z'])))-9) - 1.211*cat['EBV']
-    cat['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W1'])))-9) - 0.184*cat['EBV']
-    cat['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W2'])))-9) - 0.113*cat['EBV']
+# mask_clean = np.ones(len(cat), dtype=bool)
+# for bit in maskbits:
+#     mask_clean &= (cat['MASKBITS'] & 2**bit)==0
+# cat = cat[mask_clean]
 
-# Get weights
+# with warnings.catch_warnings():
+#     warnings.simplefilter("ignore")
+#     cat['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_G'])))-9) - 3.214*cat['EBV']
+#     cat['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_R'])))-9) - 2.165*cat['EBV']
+#     cat['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_Z'])))-9) - 1.211*cat['EBV']
+#     cat['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W1'])))-9) - 0.184*cat['EBV']
+#     cat['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W2'])))-9) - 0.113*cat['EBV']
 
-weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/v1.1/main_lrg_linear_coeffs_pz.yaml'
-bin_index = 4
+# # Get weights
 
-weights = get_weights(cat, weights_path, bin_index)
+# weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/v1.1/main_lrg_linear_coeffs_pz.yaml'
+# bin_index = 4
+
+# weights = get_weights(cat, weights_path, bin_index)
 
