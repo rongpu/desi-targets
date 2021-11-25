@@ -64,49 +64,50 @@ def get_weights(cat, weights_path, separate_des=False):
 
     return weights
 
+# ##################### Example #####################
 
-# Prepare the catalog
+# # Prepare the catalog
 
-min_nobs = 1  # Minimum NOBS_G,R,Z; default is 1 for DESI targets
-maskbits = sorted([1, 8, 9, 11, 12, 13])
+# min_nobs = 1  # Minimum NOBS_G,R,Z; default is 1 for DESI targets
+# maskbits = sorted([1, 8, 9, 11, 12, 13])
 
-columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
-           'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 
-           'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
-           'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
+# columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
+#            'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 
+#            'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
+#            'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
 
-# cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns))
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns,
-                        rows=np.arange(int(1e6))))
+# # cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns))
+# cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns,
+#                         rows=np.arange(int(1e6))))
 
-mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
-cat = cat[mask]
+# mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+# cat = cat[mask]
 
-mask_clean = np.ones(len(cat), dtype=bool)
-for bit in maskbits:
-    mask_clean &= (cat['MASKBITS'] & 2**bit)==0
-cat = cat[mask_clean]
+# mask_clean = np.ones(len(cat), dtype=bool)
+# for bit in maskbits:
+#     mask_clean &= (cat['MASKBITS'] & 2**bit)==0
+# cat = cat[mask_clean]
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    cat['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_G'])))-9) - 3.214*cat['EBV']
-    cat['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_R'])))-9) - 2.165*cat['EBV']
-    cat['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_Z'])))-9) - 1.211*cat['EBV']
-    cat['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_G'])))-9) - 3.214*cat['EBV']
-    cat['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_R'])))-9) - 2.165*cat['EBV']
-    cat['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_Z'])))-9) - 1.211*cat['EBV']
-    cat['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W1'])))-9) - 0.184*cat['EBV']
-    cat['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W2'])))-9) - 0.113*cat['EBV']
+# with warnings.catch_warnings():
+#     warnings.simplefilter("ignore")
+#     cat['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_G'])))-9) - 3.214*cat['EBV']
+#     cat['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_R'])))-9) - 2.165*cat['EBV']
+#     cat['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_Z'])))-9) - 1.211*cat['EBV']
+#     cat['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_G'])))-9) - 3.214*cat['EBV']
+#     cat['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_R'])))-9) - 2.165*cat['EBV']
+#     cat['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_Z'])))-9) - 1.211*cat['EBV']
+#     cat['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W1'])))-9) - 0.184*cat['EBV']
+#     cat['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W2'])))-9) - 0.113*cat['EBV']
 
-# Get weights
-# weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.1/main_lrg_linear_coeffs_v0.1.yaml'
-weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.2/main_lrg_linear_coeffs_v0.2.yaml'
+# # Get weights
+# # weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.1/main_lrg_linear_coeffs_v0.1.yaml'
+# weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/main_v0.2/main_lrg_linear_coeffs_v0.2.yaml'
 
-if '_separate_des_' in os.path.basename(weights_path):
-    separate_des = True
-else:
-    separate_des = False
-print("Separate DES weights:", separate_des)
+# if '_separate_des_' in os.path.basename(weights_path):
+#     separate_des = True
+# else:
+#     separate_des = False
+# print("Separate DES weights:", separate_des)
 
-weights = get_weights(cat, weights_path, separate_des=separate_des)
+# weights = get_weights(cat, weights_path, separate_des=separate_des)
 
