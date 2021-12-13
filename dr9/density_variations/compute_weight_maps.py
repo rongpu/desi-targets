@@ -75,8 +75,10 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'ELG', 'QSO', 'LRG']:
 
     if target_class=='LRG':
         lrgmask_str = '_lrgmask_v1'
+        weights_ver = 'v0.2'
     else:
         lrgmask_str = ''
+        weights_ver = 'v0.1'
 
     print(target_class)
     target_class = target_class.lower()
@@ -90,11 +92,6 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'ELG', 'QSO', 'LRG']:
     else:
         separate_des = False
     print("Separate DES weights:", separate_des)
-
-    if target_class.upper()=='LRG':
-        weights_ver = 'v0.2'
-    else:
-        weights_ver = 'v0.1'
 
     for nside in [64, 128, 256, 512]:
 

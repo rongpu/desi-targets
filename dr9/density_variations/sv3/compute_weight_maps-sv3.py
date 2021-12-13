@@ -1,225 +1,165 @@
-################################ I have not run this script yet ################################
-
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_weight_maps.py LRG south
+# Compute linear regression weight maps using healpix maps
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
-from astropy.table import Table, vstack, hstack
+# import matplotlib.pyplot as plt
+from astropy.table import Table, vstack, hstack, join
 import fitsio
+# from astropy.io import fits
 
-from multiprocessing import Pool
 import healpy as hp
 
-import yaml
-from sklearn.linear_model import LinearRegression
-
-sys.path.append(os.path.expanduser('~/git/desi-targets/useful'))
-from isdes import get_isdes
+sys.path.append(os.path.expanduser('~/git/desi-targets/dr9/density_variations/'))
+from compute_weights import get_weights
 
 
-# resolve = 'noresolve'
-resolve = 'resolve'
+def write_output(maps):
 
-target_class, field = str(sys.argv[1]), str(sys.argv[2])
-target_class = target_class.upper()
-field = field.lower()
+    print(len(maps))
 
-if field=='south':
-    photsys = 'S'
-elif field=='north':
-    photsys = 'N'
+    area = np.sum(maps['FRACAREA'])*pix_area
+    print('Area = {:.1f} sq deg'.format(area))
+
+    mask = maps['FRACAREA']>min_pix_frac
+    maps = maps[mask]
+
+    maps['density'] = maps['n_targets'] / (pix_area * maps['FRACAREA'])
+    maps['density_predict'] = maps['n_targets_predict'] / (pix_area * maps['FRACAREA'])
+
+    if combine_north_and_south:
+        output_path = os.path.join(output_dir, '{}/linear_weights_{}_sv3_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(weights_ver, weights_ver, target_class.lower(), 'combined', nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
+    else:
+        output_path = os.path.join(output_dir, '{}/linear_weights_{}_sv3_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(weights_ver, weights_ver, target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
+    print(output_path)
+
+    if os.path.isfile(output_path):
+        return None
+
+    if not os.path.isdir(os.path.dirname(output_path)):
+        os.makedirs(os.path.dirname(output_path))
+
+    maps.write(output_path)
+
+
+combine_north_and_south = True
 
 min_nobs = 1
-maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
-maskbits = maskbits_dict[target_class]
+# maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+target_ver_str = '0.57.0'
+resolve = 'resolve'
 
-n_randoms_catalogs = 1
+randoms_counts_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/{}/counts'.format(resolve)
+randoms_systematics_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/{}/systematics'.format(resolve)
+target_densities_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/{}/{}'.format(target_ver_str, resolve)
 
-n_processes = 32
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/{}/{}/linear_weights'.format(target_ver_str, resolve)
 
-nsides = [64, 128, 256]
-# nsides = [512]
+min_pix_frac = 0.  # minimum fraction of pixel area to be used
+                   # set to 0. to remove pixels that have targets but no randoms
 
-randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS',
-                   'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z',
-                   'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
-                   'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'EBV']
+# for index in range(len(xnames)):
+#     print(xnames[index], xlabels[index])
 
-if resolve=='resolve':
-    randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
-elif resolve=='noresolve':
-    randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/noresolve/{}/randoms-noresolve-*.fits'.format(field)))
-randoms_paths = randoms_paths[:n_randoms_catalogs]
+weights_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights'
+# weights_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/linear_weights'
+weights_fn_dict = {'LRG': 'sv3_v0.2/sv3_lrg_linear_coeffs_v0.2.yaml',
+                   'BGS_ANY': 'sv3_v0.1/sv3_bgs_any_linear_coeffs_v0.1.yaml',
+                   'BGS_BRIGHT': 'sv3_v0.1/sv3_bgs_bright_linear_coeffs_v0.1.yaml',
+                   'ELG': 'sv3_v0.1/sv3_elg_linear_coeffs_v0.1.yaml',
+                   'QSO': 'sv3_v0.1/sv3_qso_linear_coeffs_separate_des_v0.1.yaml',
+                   }
 
-randoms_density = 2500
+for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'ELG', 'QSO', 'LRG']:
 
-weights_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/linear_weights/sv3_v0.1'
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/0.57.0/{}/linear_weights_v0.1'.format(resolve)
+    if target_class=='LRG':
+        lrgmask_str = '_lrgmask_v1'
+    else:
+        lrgmask_str = ''
 
+    print(target_class)
+    target_class = target_class.lower()
 
-def apply_mask(randoms, min_nobs, maskbits):
+    maskbits = maskbits_dict[target_class.upper()]
 
-    mask = (randoms['NOBS_G']>=min_nobs) & (randoms['NOBS_R']>=min_nobs) & (randoms['NOBS_Z']>=min_nobs)
+    weights_fn = weights_fn_dict[target_class.upper()]
+    weights_path = os.path.join(weights_dir, weights_fn)
+    if '_separate_des_' in os.path.basename(weights_fn):
+        separate_des = True
+    else:
+        separate_des = False
+    print("Separate DES weights:", separate_des)
 
-    mask_clean = np.ones(len(randoms), dtype=bool)
-    for bit in maskbits:
-        mask_clean &= (randoms['MASKBITS'] & 2**bit)==0
-    # print(np.sum(~mask_clean)/len(mask_clean))
+    if target_class.upper()=='LRG':
+        weights_ver = 'v0.2'
+    else:
+        weights_ver = 'v0.1'
 
-    mask &= mask_clean
-
-    return mask
-
-
-def get_systematics(pix_idx):
-
-    pix_list = pix_unique[pix_idx]
-
-    hp_table = Table()
-    hp_table['HPXPIXEL'] = pix_list
-    hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
-    hp_table['density_predict'] = 0.
-
-    for index in np.arange(len(pix_idx)):
-
-        idx = pixorder[pixcnts[pix_idx[index]]:pixcnts[pix_idx[index]+1]]
-        hp_table['density_predict'][index] = np.mean(randoms['density_predict'][idx])
-
-    return hp_table
-
-
-if __name__ == '__main__':
-
-    print('Start!')
-
-    time_start = time.time()
-
-    randoms_stack = []
-
-    for randoms_path in randoms_paths:
-
-        # print(randoms_path)
-        # randoms_index_str = os.path.basename(randoms_path).replace('randoms-{}-'.format(resolve), '').replace('.fits', '')
-
-        randoms = Table(fitsio.read(randoms_path, columns=randoms_columns))
-        # print(len(randoms))
-
-        if fitsio.read_header(randoms_path, ext=1)['DENSITY']!=randoms_density:
-            raise ValueError
-
-        if resolve=='resolve':
-            mask = randoms['PHOTSYS']==photsys
-            randoms = randoms[mask]
-
-        mask = apply_mask(randoms, min_nobs, maskbits)
-        randoms = randoms[mask]
-
-        randoms_stack.append(randoms)
-
-    randoms = vstack(randoms_stack)
-    print('Loading complete!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        randoms['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9)
-        randoms['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9)
-        randoms['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9)
-        randoms['psfdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9)
-        randoms['psfdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9)
-        randoms['psfdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9)
-        randoms['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9)
-        randoms['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9)
-        randoms['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9) - 3.214*randoms['EBV']
-        randoms['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9) - 2.165*randoms['EBV']
-        randoms['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9) - 1.211*randoms['EBV']
-        randoms['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9) - 3.214*randoms['EBV']
-        randoms['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9) - 2.165*randoms['EBV']
-        randoms['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9) - 1.211*randoms['EBV']
-        randoms['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9) - 0.184*randoms['EBV']
-        randoms['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9) - 0.113*randoms['EBV']
-
-    ############################################ Get weights #####################################################
-
-    if (target_class!='qso') or (field=='north'):
-
-        with open(os.path.join(weights_dir, "sv3_{}_linear_coeffs_v0.1.yaml".format(target_class.lower())), "r") as f:
-            linear_coeffs = yaml.safe_load(f)
-
-        xnames_fit = list(linear_coeffs[field].keys())
-        xnames_fit.remove('intercept')
-
-        # Remove bad randoms
-        mask_bad = np.full(len(randoms), False)
-        for col in xnames_fit:
-            mask_bad |= ~np.isfinite(randoms[col])
-        print('{} bad randoms'.format(np.sum(mask_bad)))
-        randoms = randoms[~mask_bad]
-
-        reg = LinearRegression()
-        reg.intercept_ = linear_coeffs[field]['intercept']
-        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
-        
-        data = np.column_stack([randoms[xname] for xname in xnames_fit])
-        randoms['density_predict'] = reg.predict(data)
-
-    else:  # QSOs have different linear weights for DES and DECaLS
-
-        with open(os.path.join(weights_dir, "sv3_{}_linear_coeffs_separate_des_v0.1.yaml".format(target_class.lower())), "r") as f:
-            linear_coeffs = yaml.safe_load(f)
-
-        isdes = get_isdes(randoms['RA'], randoms['DEC'], 128)
-
-        randoms['density_predict'] = 0.
-
-        xnames_fit = list(linear_coeffs['DECaLS'].keys())
-        xnames_fit.remove('intercept')
-
-        # Remove bad randoms
-        mask_bad = np.full(len(randoms), False)
-        for col in xnames_fit:
-            mask_bad |= ~np.isfinite(randoms[col])
-        print('{} bad randoms'.format(np.sum(mask_bad)))
-        randoms = randoms[~mask_bad]
-
-        reg = LinearRegression()
-        reg.intercept_ = linear_coeffs[field]['intercept']
-        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
-        data = np.column_stack([randoms[xname][~isdes] for xname in xnames_fit])
-        randoms['density_predict'][~isdes] = reg.predict(data)
-
-        xnames_fit = list(linear_coeffs['DES'].keys())
-        xnames_fit.remove('intercept')
-        reg = LinearRegression()
-        reg.intercept_ = linear_coeffs[field]['intercept']
-        reg.coef_ = np.array([linear_coeffs[field][xname] for xname in xnames_fit])
-        data = np.column_stack([randoms[xname][isdes] for xname in xnames_fit])
-        randoms['density_predict'][isdes] = reg.predict(data)
-
-    ########################################################################################################
-
-    for nside in nsides:
+    for nside in [64, 128, 256, 512]:
 
         npix = hp.nside2npix(nside)
+        pix_area = hp.pixelfunc.nside2pixarea(nside, degrees=True)
+        print(nside, 'Healpix size = {:.5f} sq deg'.format(pix_area))
 
-        pix_allobj = hp.pixelfunc.ang2pix(nside, randoms['RA'], randoms['DEC'], lonlat=True)
-        pix_unique, pixcnts = np.unique(pix_allobj, return_counts=True)
+        field = 'combined'
 
-        pixcnts = np.insert(pixcnts, 0, 0)
-        pixcnts = np.cumsum(pixcnts)
+        for field in ['north', 'south']:
 
-        pixorder = np.argsort(pix_allobj)
+            if field=='north' or field=='BASS+MzLS':
+                photsys = 'N'
+            else:
+                photsys = 'S'
 
-        # split among the Cori processors
-        pix_idx_split = np.array_split(np.arange(len(pix_unique)), n_processes)
+            density = Table.read(os.path.join(target_densities_dir, 'density_map_sv3_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps = maps[maps['n_randoms']>0]
+            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps1.remove_columns(['RA', 'DEC'])
+            maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
+            maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
 
-        # start multiple worker processes
-        with Pool(processes=n_processes) as pool:
-            res = pool.map(get_systematics, pix_idx_split)
+            # # Load stellar density map
+            # stardens = np.load('/Users/rongpu/Documents/Data/desi_lrg_selection/dr7/healpix_maps/pixweight-dr7.1-0.22.0_stardens_{}_ring.npy'.format(nside))
+            # maps['stardens'] = stardens[maps['HPXPIXEL']]
+            # maps['stardens_log'] = np.log10(maps['stardens'])
 
-        hp_table = vstack(res)
-        hp_table.sort('HPXPIXEL')
+            maps['PHOTSYS'] = photsys
 
-        hp_table.write(os.path.join(output_dir, 'linear_weights_v0.1_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class.lower(), field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits]))))
+            density_predict = get_weights(maps, weights_path, separate_des=separate_des)
+            maps['n_targets_predict'] = density_predict * (pix_area * maps['FRACAREA'])
 
-    print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+            if not combine_north_and_south:
+                write_output(maps)
+            else:
+                if field=='north':
+                    maps_north = maps.copy()
+                else:
+                    maps_south = maps.copy()
+
+        if combine_north_and_south:
+
+            ########## Combine the two maps; proper handling of overlapping pixels ##########
+
+            pix_overlap = np.intersect1d(maps_north['HPXPIXEL'], maps_south['HPXPIXEL'])
+            mask = np.in1d(maps_north['HPXPIXEL'], pix_overlap)
+            maps_overlap_north = maps_north[mask]
+            maps_north = maps_north[~mask]
+            mask = np.in1d(maps_south['HPXPIXEL'], pix_overlap)
+            maps_overlap_south = maps_south[mask]
+            maps_south = maps_south[~mask]
+
+            maps_overlap_north.sort('HPXPIXEL')
+            maps_overlap_south.sort('HPXPIXEL')
+
+            maps_overlap = maps_overlap_south.copy()
+            maps_overlap['n_targets'] = maps_overlap_north['n_targets'] + maps_overlap_south['n_targets']
+            maps_overlap['n_targets_predict'] = maps_overlap_north['n_targets_predict'] + maps_overlap_south['n_targets_predict']
+            maps_overlap['FRACAREA'] = maps_overlap_north['FRACAREA'] + maps_overlap_south['FRACAREA']
+
+            maps = vstack([maps_north, maps_south, maps_overlap])
+
+            ######################################################################
+
+            write_output(maps)
+
