@@ -24,6 +24,7 @@ elif field=='north':
 
 min_nobs = 2
 # maskbits = sorted([1, 13])
+# maskbits = sorted([1, 12, 13])
 # maskbits = sorted([1, 11, 12, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
 

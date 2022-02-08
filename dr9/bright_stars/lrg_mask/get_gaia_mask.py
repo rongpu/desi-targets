@@ -2,6 +2,10 @@
 # parallel --jobs 5 < get_gaia_mask.txt; exit
 # timing: 7min * 200 / 5 / 60
 
+# BUG FIX NOT RERUN YET:
+# The line "mask_remove |= mask_rect" was commented out
+# so that gaia_mask does not include custom masks
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 # import matplotlib.pyplot as plt
@@ -156,7 +160,7 @@ mask_rect = np.full(len(cat), False)
 for radec in rect_mask_data:
     ramin, ramax, decmin, decmax = radec
     mask_rect |= (cat['RA']>ramin) & (cat['RA']<ramax) & (cat['DEC']>decmin) & (cat['DEC']<decmax)
-mask_remove |= mask_rect
+# mask_remove |= mask_rect
 mask_remove_bright |= mask_rect
 
 ###################################################################
