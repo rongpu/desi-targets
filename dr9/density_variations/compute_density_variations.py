@@ -15,15 +15,17 @@ target_class, field = str(sys.argv[1]), str(sys.argv[2])
 target_class = target_class.upper()
 field = field.lower()
 
-min_nobs = 2
+min_nobs = 1
 
 use_combined_catalog = True
 
 target_bits = {'LRG': 0, 'ELG': 1, 'QSO': 2, 'BGS_ANY': 60, 'BGS_BRIGHT': 1}
 # maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
-maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+maskbits_dict = {'LRG': [1, 12, 13], 'ELG': [1, 12, 13], 'QSO': [1, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}  # The maskbits in desitarget
+# maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+apply_lrgmask = False
+# apply_lrgmask = True
 
-apply_lrgmask = True
 if apply_lrgmask:
     lrgmask_str = '_lrgmask_v1'
 else:

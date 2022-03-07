@@ -53,14 +53,14 @@ for index, tileid in enumerate(tiles['TILEID']):
         tmp = tmp1.copy()
         tmp = join(tmp, tmp2, keys='TARGETID')
         tmp = join(tmp, tmp4, keys='TARGETID')
-        
+
         mask = tmp['DESI_TARGET'] & 2**0 > 0
         tmp = tmp[mask]
 
         # night = fn[fn.find('-thru2021')+5:-5]
         # tmp['night'] = int(night)
         tmp['LASTNIGHT'] = tiles['LASTNIGHT'][index]
-        
+
         cat_stack.append(tmp)
 
 cat = vstack(cat_stack)

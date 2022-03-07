@@ -22,14 +22,16 @@ if field=='south':
 elif field=='north':
     photsys = 'N'
 
-min_nobs = 2
+min_nobs = 1
 # maskbits = sorted([1, 13])
-# maskbits = sorted([1, 12, 13])
+maskbits = sorted([1, 12, 13])
 # maskbits = sorted([1, 11, 12, 13])
 # maskbits = sorted([1, 8, 9, 11, 12, 13])
+apply_lrgmask = False
 
-maskbits = []
-apply_lrgmask = True
+# maskbits = []
+# apply_lrgmask = True
+
 if apply_lrgmask:
     lrgmask_str = '_lrgmask_v1'
 else:
