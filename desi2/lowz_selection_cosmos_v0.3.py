@@ -28,7 +28,7 @@ ramin, ramax, decmin, decmax = ra - 2, ra + 2, dec - 2, dec + 2
 #     mask &= (cat['NOBS_G']>=1) & (cat['NOBS_R']>=1) & (cat['NOBS_Z']>=1)
 #     print(sweep_fn, np.sum(mask)/len(mask), np.sum(mask))
 #     mask &= (cat['RA']>ramin) & (cat['RA']<ramax) & (cat['DEC']>decmin) & (cat['DEC']<decmax)
-#     print(sweep_fn, np.sum(mask)/len(mask), np.sum(mask))    
+#     print(sweep_fn, np.sum(mask)/len(mask), np.sum(mask))
 #     cat = cat[mask]
 #     cat_stack.append(cat)
 # cat = vstack(cat_stack)
@@ -89,45 +89,45 @@ print(len(cat))
 
 #################### Flag existing DESI redshifts ######################
 
-t1 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv1-dark.fits'))
-mask = (t1['TARGET_RA']>ramin) & (t1['TARGET_RA']<ramax) & (t1['TARGET_DEC']>decmin) & (t1['TARGET_DEC']<decmax)
-t1 = t1[mask]
-t1['bright'] = False
-t2 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv3-dark.fits'))
-mask = (t2['TARGET_RA']>ramin) & (t2['TARGET_RA']<ramax) & (t2['TARGET_DEC']>decmin) & (t2['TARGET_DEC']<decmax)
-t2 = t2[mask]
-t2['bright'] = False
+# t1 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv1-dark.fits'))
+# mask = (t1['TARGET_RA']>ramin) & (t1['TARGET_RA']<ramax) & (t1['TARGET_DEC']>decmin) & (t1['TARGET_DEC']<decmax)
+# t1 = t1[mask]
+# t1['bright'] = False
+# t2 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv3-dark.fits'))
+# mask = (t2['TARGET_RA']>ramin) & (t2['TARGET_RA']<ramax) & (t2['TARGET_DEC']>decmin) & (t2['TARGET_DEC']<decmax)
+# t2 = t2[mask]
+# t2['bright'] = False
 
-t3 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv1-bright.fits'))
-mask = (t3['TARGET_RA']>ramin) & (t3['TARGET_RA']<ramax) & (t3['TARGET_DEC']>decmin) & (t3['TARGET_DEC']<decmax)
-t3 = t3[mask]
-t3['bright'] = True
-t4 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv3-bright.fits'))
-mask = (t4['TARGET_RA']>ramin) & (t4['TARGET_RA']<ramax) & (t4['TARGET_DEC']>decmin) & (t4['TARGET_DEC']<decmax)
-t4 = t4[mask]
-t4['bright'] = True
+# t3 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv1-bright.fits'))
+# mask = (t3['TARGET_RA']>ramin) & (t3['TARGET_RA']<ramax) & (t3['TARGET_DEC']>decmin) & (t3['TARGET_DEC']<decmax)
+# t3 = t3[mask]
+# t3['bright'] = True
+# t4 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/fuji/zcatalog/zpix-sv3-bright.fits'))
+# mask = (t4['TARGET_RA']>ramin) & (t4['TARGET_RA']<ramax) & (t4['TARGET_DEC']>decmin) & (t4['TARGET_DEC']<decmax)
+# t4 = t4[mask]
+# t4['bright'] = True
 
-# t5 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/guadalupe/zcatalog/zpix-main-bright.fits'))
-# mask = (t5['TARGET_RA']>ramin) & (t5['TARGET_RA']<ramax) & (t5['TARGET_DEC']>decmin) & (t5['TARGET_DEC']<decmax)
-# t5 = t5[mask]
-# t5['bright'] = False
+# # t5 = Table(fitsio.read('/global/cfs/cdirs/desi/spectro/redux/guadalupe/zcatalog/zpix-main-bright.fits'))
+# # mask = (t5['TARGET_RA']>ramin) & (t5['TARGET_RA']<ramax) & (t5['TARGET_DEC']>decmin) & (t5['TARGET_DEC']<decmax)
+# # t5 = t5[mask]
+# # t5['bright'] = False
 
-# obs = vstack([t1, t2, t3, t3, t4, t5], join_type='inner')
-obs = vstack([t1, t2, t3, t4], join_type='inner')
-print(len(obs), len(np.unique(obs['TARGETID'])))
+# # obs = vstack([t1, t2, t3, t3, t4, t5], join_type='inner')
+# obs = vstack([t1, t2, t3, t4], join_type='inner')
+# print(len(obs), len(np.unique(obs['TARGETID'])))
 
-obs['EFFTIME_LRG'] = 12.15 * obs['TSNR2_LRG']
+# obs['EFFTIME_LRG'] = 12.15 * obs['TSNR2_LRG']
 
-# Remove duplicates keeping the highest EFFTIME_LRG
-obs.sort('EFFTIME_LRG', reverse=True)
-_, idx_keep = np.unique(obs['TARGETID'], return_index=True)
-obs = obs[idx_keep]
-print(len(obs), len(np.unique(obs['TARGETID'])))
+# # Remove duplicates keeping the highest EFFTIME_LRG
+# obs.sort('EFFTIME_LRG', reverse=True)
+# _, idx_keep = np.unique(obs['TARGETID'], return_index=True)
+# obs = obs[idx_keep]
+# print(len(obs), len(np.unique(obs['TARGETID'])))
 
-obs.rename_columns(['TARGET_RA', 'TARGET_DEC'], ['RA', 'DEC'])
-obs.write('/global/cscratch1/sd/rongpu/temp/fuji_in_cosmos.fits')
+# obs.rename_columns(['TARGET_RA', 'TARGET_DEC'], ['RA', 'DEC'])
+# obs.write('/global/cscratch1/sd/rongpu/temp/fuji_in_cosmos.fits')
 
-# obs = Table(fitsio.read('/global/cscratch1/sd/rongpu/temp/fuji_in_cosmos.fits'))
+obs = Table(fitsio.read('/global/cscratch1/sd/rongpu/temp/fuji_in_cosmos.fits'))
 
 mask = obs['ZWARN']==0
 mask &= obs['COADD_FIBERSTATUS']==0
@@ -137,8 +137,33 @@ obs = obs[mask]
 print(len(obs))
 
 mask_obs = np.in1d(cat['TARGETID'], obs['TARGETID'])
-cat['observed'] = False
-cat['observed'][mask_obs] = True
+cat['observed'] = mask_obs.copy()
 
-cat.write('/global/cfs/cdirs/desi/users/rongpu/misc/cosmos_lowz_sample_v0.2.fits')
+#################### Exclude SV3 LRG and SV3 BGS_BRIGHT+BGS_FAINT targets ######################
+sv3_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
+
+sv3lrg = []
+for field in ['north', 'south']:
+    tmp = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_lrg_{}_0.57.0_basic.fits'.format(field)), columns=['TARGETID']))
+    sv3lrg.append(hstack([tmp]))
+sv3lrg = vstack(sv3lrg)
+print(len(sv3lrg))
+
+sv3bgs = []
+for field in ['north', 'south']:
+    tmp = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_bgs_any_{}_0.57.0_basic.fits'.format(field)), columns=['TARGETID', 'SV3_BGS_TARGET']))
+    sv3bgs.append(hstack([tmp]))
+sv3bgs = vstack(sv3bgs)
+print(len(sv3bgs))
+# Select BGS Bright and BGS Faint targets
+mask = (sv3bgs['SV3_BGS_TARGET'] & 2**1 > 0) | (sv3bgs['SV3_BGS_TARGET'] & 2**0 > 0)
+sv3bgs = sv3bgs[mask]
+print(len(sv3bgs))
+
+cat['sv3lrg'] = np.in1d(cat['TARGETID'], sv3lrg['TARGETID'])
+cat['sv3bgs'] = np.in1d(cat['TARGETID'], sv3bgs['TARGETID'])
+
+cat['is_target'] = (~cat['sv3lrg']) & (~cat['sv3bgs'])
+
+cat.write('/global/cfs/cdirs/desi/users/rongpu/misc/cosmos_lowz_sample_v0.3.fits')
 

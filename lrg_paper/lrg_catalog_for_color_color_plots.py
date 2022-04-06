@@ -56,6 +56,7 @@ def trim_sweep(sweep_index):
 
     pz_path = os.path.join(pz_dir, sweep_fn[:-5]+'-pz.fits')
     pz = Table(fitsio.read(pz_path, rows=idx))
+    pz.remove_columns(['RELEASE', 'BRICKID', 'OBJID'])
 
     cat = hstack([cat, pz])
 
