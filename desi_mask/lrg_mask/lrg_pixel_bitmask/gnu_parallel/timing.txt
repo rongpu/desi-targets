@@ -1,0 +1,47 @@
+slurm-51957593.out
+
+Number of bricks in this node: 84553
+lrg_gaiamask south 3 0 Done! 02:17:58
+Number of bricks in this node: 84553
+lrg_gaiamask south 3 1 Done! 02:34:14
+Number of bricks in this node: 84552
+lrg_gaiamask south 3 2 Done! 02:34:53
+Number of bricks in this node: 31183
+
+lrg_gaiamask north 3 0 Done! 00:40:20
+Number of bricks in this node: 31183
+lrg_gaiamask north 3 1 Done! 00:58:07
+Number of bricks in this node: 31182
+lrg_gaiamask north 3 2 Done! 00:58:21
+
+
+Number of bricks in this node: 84553
+lrg_wisemask south 3 0 Done! 00:50:42
+Number of bricks in this node: 84553
+lrg_wisemask south 3 1 Done! 00:56:03
+Number of bricks in this node: 84552
+lrg_wisemask south 3 2 Done! 00:56:10
+
+Number of bricks in this node: 31183
+lrg_wisemask north 3 0 Done! 00:14:28
+Number of bricks in this node: 31183
+lrg_wisemask north 3 1 Done! 00:20:42
+Number of bricks in this node: 31182
+lrg_wisemask north 3 2 Done! 00:20:38
+
+
+Number of bricks in this node: 84552
+combine_lrg_masks south 3 2 Done! 00:47:55
+Number of bricks in this node: 84553
+combine_lrg_masks south 3 0 Done! 00:40:19
+Number of bricks in this node: 84553
+combine_lrg_masks south 3 1 Done! 00:47:43
+
+Number of bricks in this node: 31183
+combine_lrg_masks north 3 0 Done! 00:11:50
+Number of bricks in this node: 31183
+combine_lrg_masks north 3 1 Done! 00:17:42
+Number of bricks in this node: 31182
+combine_lrg_masks north 3 2 Done! 00:17:41
+
+Total wall time: 05:56:58
