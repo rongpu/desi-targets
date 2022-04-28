@@ -1,7 +1,7 @@
-# Create pixel-level per-brick custom mask
+# Create pixel-level per-brick custom mask for ELGs
 
 # To run on a single interactive node:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python custom_mask.py "1 0" > custom_mask_log.txt
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python elg_custom_mask.py "1 0" > elg_custom_mask_log.txt
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -22,13 +22,11 @@ from multiprocessing import Pool
 import argparse
 
 
-sga_bit = 0  # circular SGA masks
-rect_bit = 1  # Custom rectangular masks
+mask_bit = 0
 
-custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/desi_custom_mask_v1.txt'
+custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/elg_custom_mask_v1.txt'
 
-# output_dir = '/global/cscratch1/sd/rongpu/desi/all_tracers_custom_mask/v1'
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/desi_veto_masks/all_tracers_custom_mask/v1'
+output_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/elg/dev/elg_custom/v1'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('args')
@@ -47,7 +45,7 @@ def get_pixel_bitmask(brick_index):
 
     brickname = str(bricks['brickname'][brick_index])
 
-    output_path = os.path.join(output_dir, 'coadd/{}/{}/{}-custommask.fits.gz'.format(brickname[:3], brickname, brickname))
+    output_path = os.path.join(output_dir, 'coadd/{}/{}/{}-elg-custommask.fits.gz'.format(brickname[:3], brickname, brickname))
     if os.path.isfile(output_path):
         print('Pixel bitmask for {} already exists!'.format(brickname))
         return None
@@ -150,7 +148,7 @@ def get_pixel_bitmask(brick_index):
                     mask_rect |= (pix_ra>ramin) & (pix_ra<ramax) & (pix_dec>decmin) & (pix_dec<decmax)
                 mask_rect = mask_rect.reshape(chunk_size, chunk_size)
                 if np.sum(mask_rect)>0:
-                    bitmask[mask_rect] += 2**rect_bit
+                    bitmask[mask_rect] += 2**mask_bit
 
             if not circ_overlap:
                 bitmask_j.append(bitmask)
@@ -189,7 +187,7 @@ def get_pixel_bitmask(brick_index):
 
             dist = np.dot(mat1, mat2)
             mask = np.any(dist>np.cos(np.radians(mask_radii/3600.)), axis=1).reshape(chunk_size, chunk_size)
-            bitmask[mask] += 2**sga_bit
+            bitmask[mask] += 2**mask_bit
 
             bitmask_j.append(bitmask)
 
@@ -297,5 +295,5 @@ time_start = time.time()
 with Pool(processes=n_processes) as pool:
     res = pool.map(get_pixel_bitmask, bricks_list, chunksize=1)
 
-print('custom_mask {} {} Done!'.format(n_task, task_id), time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+print('elg_custom_mask {} {} Done!'.format(n_task, task_id), time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
 

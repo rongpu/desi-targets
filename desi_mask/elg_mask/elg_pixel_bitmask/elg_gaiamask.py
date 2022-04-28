@@ -4,7 +4,7 @@
 # python elg_gaiamask.py "south 1 0"
 
 # Full production run on interactive nodes:
-# salloc -N 4 -C haswell -q interactive -t 04:00:00 --account desi
+# salloc -N 3 -C haswell -q interactive -t 04:00:00 --account desi
 # srun --wait=0 --ntasks-per-node 1 payload.sh tasks.txt ; exit
 
 from __future__ import division, print_function
@@ -30,7 +30,7 @@ gaia_bit = 0
 
 gaia_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_elg_mask_v1.fits'
 
-output_dir = '/global/cscratch1/sd/rongpu/desi/elg_pixel_bitmask/dev'
+output_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/elg/dev/gaiamask/v1'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('args')

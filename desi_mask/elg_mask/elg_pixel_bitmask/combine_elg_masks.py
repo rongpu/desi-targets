@@ -3,6 +3,10 @@
 # To run on a single interactive node:
 # python combine_elg_masks.py "south 1 0"
 
+# Full production run on interactive nodes:
+# salloc -N 3 -C haswell -q interactive -t 04:00:00
+# srun --wait=0 --ntasks-per-node 1 payload.sh tasks.txt ; exit
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -17,13 +21,14 @@ import argparse
 ts_bit = 0
 custom_bit = 1
 gaia_bit = 2
+elg_custom_bit = 3
 
 ts_maskbits = [1, 12, 13]  # DESI targeting mask bits
 
-custom_input_dir = '/global/cscratch1/sd/rongpu/desi/custom_pixel_bitmask'
-elg_custom_input_dir = '/global/cscratch1/sd/rongpu/desi/elg_custom_pixel_bitmask'
-dev_input_dir = '/global/cscratch1/sd/rongpu/desi/elg_pixel_bitmask/dev'
-output_dir = '/global/cscratch1/sd/rongpu/desi/elg_pixel_bitmask/v1'
+custom_input_dir = '/global/cfs/cdirs/desi/users/rongpu/data/veto_masks/all_tracers_custom_mask/v1'
+elg_custom_input_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/elg/dev/elg_custom/v1'
+gaia_input_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/elg/dev/gaiamask/v1'
+output_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/elg/v1'
 # output_dir = '/global/cfs/cdirs/desi/survey/catalogs/brickmasks/ELG/v1'
 
 parser = argparse.ArgumentParser()
@@ -74,7 +79,12 @@ def get_combined_bitmask(brick_index):
         customm = fitsio.read(customm_path).astype(np.uint8)
         bitmask[customm!=0] += 2**custom_bit
 
-    gaiam_path = os.path.join(dev_input_dir, '{}/coadd/{}/{}/{}-gaiamask.fits.gz'.format(field, brickname[:3], brickname, brickname))
+    elg_customm_path = os.path.join(elg_custom_input_dir, 'coadd/{}/{}/{}-elg-custommask.fits.gz'.format(brickname[:3], brickname, brickname))
+    if os.path.isfile(elg_customm_path):  # there is no elg_custom masking if the file does not exist
+        elg_customm = fitsio.read(elg_customm_path).astype(np.uint8)
+        bitmask[elg_customm!=0] += 2**elg_custom_bit
+
+    gaiam_path = os.path.join(gaia_input_dir, '{}/coadd/{}/{}/{}-gaiamask.fits.gz'.format(field, brickname[:3], brickname, brickname))
     gaiam = fitsio.read(gaiam_path).astype(np.uint8)
     bitmask[gaiam!=0] += 2**gaia_bit
 

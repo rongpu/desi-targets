@@ -3,6 +3,10 @@
 # To run on a single interactive node:
 # python combine_lrg_masks.py "south 1 0"
 
+# Full production run on interactive nodes:
+# salloc -N 3 -C haswell -q interactive -t 04:00:00
+# srun --wait=0 --ntasks-per-node 1 payload.sh tasks.txt ; exit
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -23,10 +27,10 @@ wise_bit = 4
 unwise_maskbits = [0, 1, 2, 3, 4, 6, 7]  # all except the HALO bit
 ts_maskbits = [1, 12, 13]  # DESI targeting mask bits
 
-custom_input_dir = '/global/cscratch1/sd/rongpu/desi/custom_pixel_bitmask'
-dev_input_dir_wise = '/global/cscratch1/sd/rongpu/desi/lrg_pixel_bitmask/dev'
-dev_input_dir_gaia = '/global/cscratch1/sd/rongpu/desi/lrg_pixel_bitmask/dev2'
-output_dir = '/global/cscratch1/sd/rongpu/desi/lrg_pixel_bitmask/v1'
+custom_input_dir = '/global/cfs/cdirs/desi/users/rongpu/data/veto_masks/all_tracers_custom_mask/v1'
+wise_input_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/lrg/dev/wisemask/v1'
+gaia_input_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/lrg/dev/gaiamask/v1'
+output_dir = '/global/cscratch1/sd/rongpu/desi/veto_masks/lrg/v1'
 # output_dir = '/global/cfs/cdirs/desi/survey/catalogs/brickmasks/LRG/v1'
 
 parser = argparse.ArgumentParser()
@@ -84,11 +88,11 @@ def get_combined_bitmask(brick_index):
         customm = fitsio.read(customm_path).astype(np.uint8)
         bitmask[customm!=0] += 2**custom_bit
 
-    gaiam_path = os.path.join(dev_input_dir_gaia, '{}/coadd/{}/{}/{}-gaiamask.fits.gz'.format(field, brickname[:3], brickname, brickname))
+    gaiam_path = os.path.join(gaia_input_dir, '{}/coadd/{}/{}/{}-gaiamask.fits.gz'.format(field, brickname[:3], brickname, brickname))
     gaiam = fitsio.read(gaiam_path).astype(np.uint8)
     bitmask[gaiam!=0] += 2**gaia_bit
 
-    wisem_path = os.path.join(dev_input_dir_wise, '{}/coadd/{}/{}/{}-wisemask.fits.gz'.format(field, brickname[:3], brickname, brickname))
+    wisem_path = os.path.join(wise_input_dir, '{}/coadd/{}/{}/{}-wisemask.fits.gz'.format(field, brickname[:3], brickname, brickname))
     wisem = fitsio.read(wisem_path).astype(np.uint8)
     bitmask[wisem!=0] += 2**wise_bit
 

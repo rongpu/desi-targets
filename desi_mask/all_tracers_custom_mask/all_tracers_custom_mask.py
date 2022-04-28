@@ -1,7 +1,7 @@
-# Create pixel-level per-brick custom mask for ELGs
+# Create pixel-level per-brick custom mask for all tracers
 
 # To run on a single interactive node:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python elg_custom_mask.py "1 0" > custom_mask_log.txt
+# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python all_tracers_custom_mask.py "1 0" > custom_mask_log.txt
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -25,9 +25,9 @@ import argparse
 sga_bit = 0  # circular SGA masks
 rect_bit = 1  # Custom rectangular masks
 
-custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/elg_custom_mask_v1.txt'
+custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/desi_custom_mask_v1.txt'
 
-output_dir = '/global/cscratch1/sd/rongpu/desi/custom_pixel_bitmask'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/veto_masks/all_tracers_custom_mask/v1'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('args')
@@ -58,9 +58,8 @@ def get_pixel_bitmask(brick_index):
     rect_overlap = False
     for radec in rect_mask_data:
         ramin, ramax, decmin, decmax = radec
-        for tmp_ra, tmp_dec in [[ramin, decmin], [ramin, decmax], [ramax, decmin], [ramax, decmax]]:
-            if (tmp_ra>brick_ramin) and (tmp_ra<brick_ramax) and (tmp_dec>brick_decmin) and (tmp_dec<brick_decmax):
-                rect_overlap = True
+        if (ramin<brick_ramax) and (ramax>brick_ramin) and (decmax>brick_decmin) and (decmin<brick_decmax):
+            rect_overlap = True
 
     ra1, dec1 = [bricks['ra'][brick_index]], [bricks['dec'][brick_index]]
     sky1 = SkyCoord(ra1*u.degree, dec1*u.degree, frame='icrs')
