@@ -29,6 +29,7 @@ print(len(tiles))
 columns_1 = ['TARGETID', 'CHI2', 'Z', 'ZERR', 'ZWARN', 'SPECTYPE', 'DELTACHI2']
 columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'SV1_DESI_TARGET', 'SV1_BGS_TARGET', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE']
 columns_4 = ['TARGETID', 'TSNR2_ELG', 'TSNR2_BGS', 'TSNR2_QSO', 'TSNR2_LRG']
+emline_columns = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
 
 tileid_list = tiles['TILEID']
 
@@ -54,15 +55,18 @@ for tileid in tileid_list:
     fn_list = sorted(glob.glob(os.path.join(data_dir, str(tileid), '*/redrock-*.fits')))
 
     for fn in fn_list:
-
         tmp1 = Table(fitsio.read(fn, ext=1, columns=columns_1))
         tmp2 = Table(fitsio.read(fn, ext=2, columns=columns_2))
         tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
-        if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID'])):
+        emline_fn = fn.replace('redrock-', 'emline-')
+        tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(emline_columns)))
+
+        if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID'])):
             raise ValueError
         tmp = tmp1.copy()
         tmp = join(tmp, tmp2, keys='TARGETID')
         tmp = join(tmp, tmp4, keys='TARGETID')
+        tmp = join(tmp, tmp5, keys='TARGETID')
 
         mask = tmp['SV1_DESI_TARGET'] & 2**0 > 0
         tmp = tmp[mask]
