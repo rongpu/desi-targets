@@ -44,11 +44,6 @@ for col in gaia_columns:
 custom_mask_fn = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/desi_custom_mask_v1.txt'
 with open(custom_mask_fn, 'r') as f:
     lines = list(map(str.strip, f.readlines()))
-    
-# circular mask
-ra, dec, radius = [], [], []
-# rectangular mask
-ramin, ramax, decmin, decmax = [], [], [], []
 
 circ_mask_data = []
 rect_mask_data = []
