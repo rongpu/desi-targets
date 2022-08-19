@@ -1,6 +1,7 @@
-# Add sweep, photo-z and stellar mass columns
+# Add sweep and sweep-extra columns and DR9 photo-z's
 # Example:
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python add_sweep_columns_to_target_catalogs.py LRG south
+# salloc -N 1 -C cpu -q interactive -t 4:00:00
+# python add_sweep_columns_to_target_catalogs.py LRG
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -44,98 +45,119 @@ def is_in_box(objs, radecbox, ra_col='RA', dec_col='DEC'):
     return ii
 
 
-n_processes = 32
-
-sweep_columns = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
-              'FRACFLUX_G', 'FRACFLUX_R', 'FRACFLUX_Z', 'FRACFLUX_W1', 'FRACFLUX_W2', 'FRACMASKED_G', 'FRACMASKED_R',
-              'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G', 'FIBERTOTFLUX_R',
-              'SHAPE_R', 'SHAPE_R_IVAR', 'SHAPE_E1', 'SHAPE_E2', 'DCHISQ']
-
-sweep_extra_columns = ['NEA_G', 'NEA_R', 'NEA_Z', 'BLOB_NEA_G', 'BLOB_NEA_R', 'BLOB_NEA_Z']
-
-data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
-# stellar_mass_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_photoz/stellar_mass'
-
-# target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
-# field: "north" or "south"
-target_class, field = str(sys.argv[1]), str(sys.argv[2])
-target_class = target_class.upper()
-field = field.lower()
-
-print(target_class, field)
-
-cat_basic_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_basic.fits'.format(target_class.lower(), field))
-output_path = os.path.join(data_dir, 'dr9_{}_{}_1.0.0_more_1.fits'.format(target_class.lower(), field))
-
-if os.path.isfile(output_path):
-    sys.exit('File already exist: '+output_path)
-
-cat_basic = Table(fitsio.read(cat_basic_path, columns=['RA', 'DEC', 'TARGETID']))
-
-# #########################################################################################
-# cat_basic = cat_basic[:len(cat_basic)//50]
-# #########################################################################################
-
-sweep_dir = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
-sweep_fn_list = np.array(sorted(glob.glob(os.path.join(sweep_dir, '*.fits'))))
-
-sweep_radec_list = [decode_sweep_name(sweep_fn) for sweep_fn in sweep_fn_list]
-mask = np.array([np.any(is_in_box(cat_basic, sweep_radec)) for sweep_radec in sweep_radec_list])
-print(np.sum(mask), len(mask))
-sweep_fn_list = sweep_fn_list[mask]
-
-
-def get_sweep_columns(sweep_fn):
-
-    sweep_extra_fn = sweep_fn.replace('/sweep/9.0/', '/sweep/9.0-extra/').replace('.fits', '-ex.fits')
+def get_sweep_columns(sweep_fn, field):
 
     cat = Table(fitsio.read(sweep_fn, columns=['OBJID', 'BRICKID', 'RELEASE']))
     targetid = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
-    idx = np.where(np.in1d(targetid, cat_basic['TARGETID']))[0]
+    if field=='north':
+        idx = np.where(np.in1d(targetid, cat_basic_north['TARGETID']))[0]
+    else:
+        idx = np.where(np.in1d(targetid, cat_basic_south['TARGETID']))[0]
     if len(idx)==0:
         return None
     targetid = targetid[idx]
-    cat = Table(fitsio.read(sweep_fn, rows=idx, columns=sweep_columns))
+    cat = Table(fitsio.read(sweep_fn, rows=idx, columns=sweep_columns_all))
     cat['TARGETID'] = targetid
+
+    sweep_extra_fn = sweep_fn.replace('/sweep/9.0/', '/sweep/9.0-extra/').replace('.fits', '-ex.fits')
     cat_extra = Table(fitsio.read(sweep_extra_fn, rows=idx, columns=sweep_extra_columns))
+
     pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz.fits')
     pz = Table(fitsio.read(pz_fn, rows=idx))
     pz.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
-    cat = hstack([cat, cat_extra, pz], join_type='exact')
 
-    # # Add stellar mass
-    # stellar_mass_path = os.path.join(stellar_mass_dir, field, os.path.basename(sweep_fn).replace('.fits', '_stellar_mass.npy'))
-    # cat['stellar_mass'] = np.load(stellar_mass_path)[idx]
+    cat = hstack([cat, cat_extra, pz], join_type='exact')
 
     return cat
 
 
-if __name__ == '__main__':
+print('Start!')
+time_start = time.time()
 
-    print('Start!')
-    time_start = time.time()
+n_processes = 32
 
-    # start multiple worker processes
-    with Pool(processes=n_processes) as pool:
-        res = pool.map(get_sweep_columns, np.unique(sweep_fn_list))
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
 
-    # Remove None elements from the list
-    for index in range(len(res)-1, -1, -1):
-        if res[index] is None:
-            res.pop(index)
+sweep_columns_1 = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
+                   'FRACFLUX_G', 'FRACFLUX_R', 'FRACFLUX_Z', 'FRACFLUX_W1', 'FRACFLUX_W2', 'FRACMASKED_G', 'FRACMASKED_R',
+                   'FRACMASKED_Z', 'FRACIN_G', 'FRACIN_R', 'FRACIN_Z', 'FIBERTOTFLUX_G',
+                   'SHAPE_R', 'SHAPE_R_IVAR', 'SHAPE_E1', 'SHAPE_E2', 'SERSIC', 'DCHISQ']
 
-    cat_more = vstack(res, join_type='exact')
-    if len(cat_more)!=len(cat_basic):
-        print(len(cat_more), len(cat_basic))
-        raise ValueError('different catalog length')
+sweep_columns_2 = ['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z',
+                   'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2',
+                   'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
 
-    # Here matching cat_more to cat_basic
-    t1_reverse_sort = np.array(cat_basic['TARGETID']).argsort().argsort()
-    cat_more = cat_more[np.argsort(cat_more['TARGETID'])[t1_reverse_sort]]
-    if not np.all(cat_more['TARGETID']==cat_basic['TARGETID']):
-        raise ValueError('different targetid')
-    cat_more.remove_column('TARGETID')
+sweep_extra_columns = ['NEA_G', 'NEA_R', 'NEA_Z', 'BLOB_NEA_G', 'BLOB_NEA_R', 'BLOB_NEA_Z']
 
-    cat_more.write(output_path, overwrite=True)
+pz_columns = ['Z_PHOT_MEAN', 'Z_PHOT_MEDIAN', 'Z_PHOT_STD', 'Z_PHOT_L68', 'Z_PHOT_U68', 'Z_PHOT_L95', 'Z_PHOT_U95', 'Z_SPEC', 'SURVEY', 'TRAINING']
 
-    print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
+sweep_columns_all = sweep_columns_1 + sweep_columns_2
+sweep_columns_all = list(set(sweep_columns_all))  # unique columns
+
+data_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
+
+# target_class: "LRG", "ELG", "QSO" or "BGS_ANY"
+target_class = str(sys.argv[1])
+target_class = target_class.upper()
+
+print(target_class)
+
+cat_basic_path = os.path.join(output_dir, 'dr9_{}_1.1.1_basic.fits'.format(target_class.lower()))
+cat_sweep_1_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_1.fits'.format(target_class.lower()))
+cat_sweep_2_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_2.fits'.format(target_class.lower()))
+cat_sweep_extra_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_extra_1.fits'.format(target_class.lower()))
+cat_pz_path = os.path.join(output_dir, 'dr9_{}_1.1.1_pz.fits'.format(target_class.lower()))
+
+if os.path.isfile(cat_sweep_1_path):
+    sys.exit('File already exist: '+cat_sweep_1_path)
+
+cat_basic = Table(fitsio.read(cat_basic_path, columns=['RA', 'DEC', 'TARGETID']))
+cat_basic_north = cat_basic[cat_basic['PHOTSYS']=='N']
+cat_basic_south = cat_basic[cat_basic['PHOTSYS']=='S']
+
+sweep_dir_north = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/north/sweep/9.0'
+sweep_fn_list_north = np.array(sorted(glob.glob(os.path.join(sweep_dir_north, '*.fits'))))
+sweep_radec_list_north = [decode_sweep_name(sweep_fn) for sweep_fn in sweep_fn_list_north]
+mask = np.array([np.any(is_in_box(cat_basic_north, sweep_radec)) for sweep_radec in sweep_radec_list_north])
+sweep_fn_list_north = np.unique(sweep_fn_list_north[mask])
+
+sweep_dir_south = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/south/sweep/9.0'
+sweep_fn_list_south = np.array(sorted(glob.glob(os.path.join(sweep_dir_south, '*.fits'))))
+sweep_radec_list_south = [decode_sweep_name(sweep_fn) for sweep_fn in sweep_fn_list_south]
+mask = np.array([np.any(is_in_box(cat_basic_south, sweep_radec)) for sweep_radec in sweep_radec_list_south])
+sweep_fn_list_south = np.unique(sweep_fn_list_south[mask])
+
+zipped_arg_list = list(zip(sweep_fn_list_north, ['north']*len(sweep_fn_list_north)))
+zipped_arg_list += list(zip(sweep_fn_list_south, ['south']*len(sweep_fn_list_south)))
+
+with Pool(processes=n_processes) as pool:
+    res = pool.map(get_sweep_columns, zipped_arg_list)
+
+# Remove None elements from the list
+for index in range(len(res)-1, -1, -1):
+    if res[index] is None:
+        res.pop(index)
+
+cat = vstack(res, join_type='exact')
+if len(cat)!=len(cat_basic):
+    print(len(cat), len(cat_basic))
+    raise ValueError('different catalog length')
+
+# Here matching cat to cat_basic
+t1_reverse_sort = np.array(cat_basic['TARGETID']).argsort().argsort()
+cat = cat[np.argsort(cat['TARGETID'])[t1_reverse_sort]]
+if not np.all(cat['TARGETID']==cat_basic['TARGETID']):
+    raise ValueError('different targetid')
+cat.remove_column('TARGETID')
+
+cat_1 = cat[sweep_columns_1].copy()
+cat_2 = cat[sweep_columns_2].copy()
+cat_extra = cat[sweep_extra_columns].copy()
+cat_pz = cat[pz_columns].copy()
+
+cat_1.write(cat_sweep_1_path)
+cat_1.write(cat_sweep_2_path)
+cat_extra.write(cat_sweep_extra_path)
+cat_pz.write(cat_pz_path)
+
+print(time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
