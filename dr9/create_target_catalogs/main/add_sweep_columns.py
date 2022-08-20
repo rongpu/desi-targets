@@ -74,8 +74,6 @@ def get_sweep_columns(sweep_fn, field):
 print('Start!')
 time_start = time.time()
 
-n_processes = 32
-
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
 
 sweep_columns_1 = ['GAIA_PHOT_BP_MEAN_MAG', 'GAIA_PHOT_RP_MEAN_MAG', 'GAIA_ASTROMETRIC_EXCESS_NOISE', 'FITBITS',
@@ -111,7 +109,7 @@ cat_pz_path = os.path.join(output_dir, 'dr9_{}_1.1.1_pz.fits'.format(target_clas
 if os.path.isfile(cat_sweep_1_path):
     sys.exit('File already exist: '+cat_sweep_1_path)
 
-cat_basic = Table(fitsio.read(cat_basic_path, columns=['RA', 'DEC', 'TARGETID']))
+cat_basic = Table(fitsio.read(cat_basic_path, columns=['RA', 'DEC', 'TARGETID', 'PHOTSYS']))
 cat_basic_north = cat_basic[cat_basic['PHOTSYS']=='N']
 cat_basic_south = cat_basic[cat_basic['PHOTSYS']=='S']
 
@@ -130,8 +128,9 @@ sweep_fn_list_south = np.unique(sweep_fn_list_south[mask])
 zipped_arg_list = list(zip(sweep_fn_list_north, ['north']*len(sweep_fn_list_north)))
 zipped_arg_list += list(zip(sweep_fn_list_south, ['south']*len(sweep_fn_list_south)))
 
+n_processes = 128
 with Pool(processes=n_processes) as pool:
-    res = pool.map(get_sweep_columns, zipped_arg_list)
+    res = pool.starmap(get_sweep_columns, zipped_arg_list, chunksize=1)
 
 # Remove None elements from the list
 for index in range(len(res)-1, -1, -1):
@@ -156,7 +155,7 @@ cat_extra = cat[sweep_extra_columns].copy()
 cat_pz = cat[pz_columns].copy()
 
 cat_1.write(cat_sweep_1_path)
-cat_1.write(cat_sweep_2_path)
+cat_2.write(cat_sweep_2_path)
 cat_extra.write(cat_sweep_extra_path)
 cat_pz.write(cat_pz_path)
 

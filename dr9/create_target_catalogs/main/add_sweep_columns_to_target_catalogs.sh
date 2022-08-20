@@ -1,4 +1,0 @@
-python add_sweep_columns_to_target_catalogs.py BGS_ANY
-python add_sweep_columns_to_target_catalogs.py LRG
-python add_sweep_columns_to_target_catalogs.py ELG
-python add_sweep_columns_to_target_catalogs.py QSO

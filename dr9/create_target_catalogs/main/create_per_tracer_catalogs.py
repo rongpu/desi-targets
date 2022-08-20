@@ -1,4 +1,5 @@
 # Example:
+# salloc -N 1 -C cpu -q interactive -t 4:00:00
 # python create_per_tracer_catalogs.py LRG
 
 from __future__ import division, print_function
@@ -43,9 +44,6 @@ cat_photom_path = os.path.join(output_dir, 'dr9_{}_1.1.1_photom.fits'.format(tar
 if os.path.isfile(cat_basic_path):
     sys.exit('File already exist: '+cat_basic_path)
 
-cat_basic = []
-cat_photom = []
-
 
 def read_target_files(target_path):
     tmp = fitsio.read(target_path, columns=['DESI_TARGET'])
@@ -57,7 +55,7 @@ def read_target_files(target_path):
     return cat
 
 
-n_processes = 256
+n_processes = 128
 with Pool(processes=n_processes) as pool:
     res = pool.map(read_target_files, target_path_list, chunksize=1)
 

@@ -6,5 +6,7 @@ python compute_density_variations.py LRG north
 python compute_density_variations.py LRG south
 python compute_density_variations.py ELG north
 python compute_density_variations.py ELG south
+python compute_density_variations.py ELG_LOP north
+python compute_density_variations.py ELG_LOP south
 python compute_density_variations.py QSO north
 python compute_density_variations.py QSO south
