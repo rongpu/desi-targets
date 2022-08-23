@@ -40,15 +40,13 @@ for nside in [256, 512]:
     for band in ['g', 'r', 'z']:
 
         plot_path = os.path.join(plot_dir, 'dr9_sky_median_{}_{}.png'.format(band, nside))
-        if os.path.isfile(plot_path):
-            continue
-        plot_map(nside, sky['HPXPIXEL'], sky['sky_median_'+band],
-                 vmin=-median_ranges[band], vmax=median_ranges[band], cmap='seismic', nest=False,
-                 title='sky_median_{} NSIDE={}'.format(band, nside), save_path=plot_path)
+        if not os.path.isfile(plot_path):
+            plot_map(nside, sky['HPXPIXEL'], sky['sky_median_'+band],
+                     vmin=-median_ranges[band], vmax=median_ranges[band], cmap='seismic', nest=False,
+                     title='sky_median_{} NSIDE={}'.format(band, nside), save_path=plot_path)
 
         plot_path = os.path.join(plot_dir, 'dr9_sky_nmad_{}_{}.png'.format(band, nside))
-        if os.path.isfile(plot_path):
-            continue
-        plot_map(nside, sky['HPXPIXEL'], sky['sky_nmad_'+band],
-                 vmin=nmad_ranges[band][0], vmax=nmad_ranges[band][1], cmap='viridis', nest=False,
-                 title='sky_nmad_{} NSIDE={}'.format(band, nside), save_path=plot_path)
+        if not os.path.isfile(plot_path):
+            plot_map(nside, sky['HPXPIXEL'], sky['sky_nmad_'+band],
+                     vmin=nmad_ranges[band][0], vmax=nmad_ranges[band][1], cmap='viridis', nest=False,
+                     title='sky_nmad_{} NSIDE={}'.format(band, nside), save_path=plot_path)
