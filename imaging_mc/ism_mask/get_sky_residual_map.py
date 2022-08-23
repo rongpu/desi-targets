@@ -1,3 +1,7 @@
+# Example:
+# salloc -N 1 -C cpu -q interactive -t 4:00:00
+# python get_sky_residual_map.py 512 south
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -72,6 +76,7 @@ def get_sky_residual_in_healpix(pix_coarse):
 
     for band in ['g', 'r', 'z']:
         band_cap = band.upper()
+        # in units of nanomaggies per sq. arcsec.
         cat['sky_'+band] = (cat['APFLUX_BLOBRESID_'+band_cap][:, -1]-cat['APFLUX_BLOBRESID_'+band_cap][:, -2]) / (np.pi*7**2-np.pi*5**2)
 
     maskbits = [1, 11, 12, 13]
@@ -133,6 +138,7 @@ for index in range(len(res)-1, -1, -1):
 #     hp_table.append(Table(fitsio.read(hp_fn)))
 
 hp_table = vstack(res)
+hp_table['HPXPIXEL'] = hp.nest2ring(nside, hp_table['HPXPIXEL'])
 hp_table.sort('HPXPIXEL')
 hp_table.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/ism_mask/sky_resid_map_{}_{}.fits'.format(nside, field), overwrite=True)
 

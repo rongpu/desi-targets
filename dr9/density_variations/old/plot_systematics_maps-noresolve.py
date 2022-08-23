@@ -31,11 +31,11 @@ dpi_dict = {64: 200, 128: 300, 256: 600}
 
 min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 
-xnames = ['pix_frac', 'stardens', 'stardens_log', 'EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
+xnames = ['FRACAREA', 'stardens', 'stardens_log', 'EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
 xlabels = ['Heapix occupation fraction', 'GAIA stellar density [deg$^{-2}$]', 'log10(GAIA stellar density [deg$^{-2}$])', 'E(B-V)', 'g-band galaxy depth [mag]', 'r-band galaxy depth [mag]', 'z-band galaxy depth [mag]', 'g-band PSF depth [mag]', 'r-band PSF depth [mag]', 'z-band PSF depth [mag]', 'W1-band PSF depth [mag]', 'W2-band PSF depth [mag]', 'g-band galaxy depth - 3.214*E(B-V) [mag]', 'r-band galaxy depth - 2.165*E(B-V) [mag]', 'z-band galaxy depth - 1.211*E(B-V) [mag]', 'g-band PSF depth - 3.214*E(B-V) [mag]', 'r-band PSF depth - 2.165*E(B-V) [mag]', 'z-band PSF depth - 1.211*E(B-V) [mag]', 'W1-band PSF depth - 0.184*E(B-V) [mag]', 'W2-band PSF depth - 0.113*E(B-V) [mag]', 'g-band PSF size [arcsec]', 'r-band PSF size [arcsec]', 'z-band PSF size [arcsec]']
 
 bin_params = {}
-bin_params['pix_frac'] = np.array([0., 1.])
+bin_params['FRACAREA'] = np.array([0., 1.])
 bin_params['stardens'], bin_params['stardens_nbins'] = np.array([200, 4000]), 30
 bin_params['stardens_log'], bin_params['stardens_log_nbins'] = np.array([2.3, 3.6]), 30
 bin_params['EBV'], bin_params['EBV_nbins'] = np.array([0., 0.15]), 30
@@ -109,10 +109,10 @@ for nside in [64, 128, 256]:
 
         print(len(maps))
 
-        area = np.sum(maps['pix_frac'])*pix_area
+        area = np.sum(maps['FRACAREA'])*pix_area
         print('Area = {:.1f} sq deg'.format(area))
 
-        mask = maps['pix_frac']>min_pix_frac
+        mask = maps['FRACAREA']>min_pix_frac
         maps = maps[mask]
 
         # Load stellar density map

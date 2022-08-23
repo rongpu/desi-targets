@@ -8,10 +8,6 @@ import fitsio
 
 import healpy as hp
 
-sys.path.append(os.path.expanduser('~/git/desi-examples/imaging_systematics'))
-from plot_healpix_map import plot_map
-
-
 params = {'legend.fontsize': 'x-large',
           'axes.labelsize': 'x-large',
           'axes.titlesize': 'x-large',
@@ -22,25 +18,24 @@ plt.rcParams.update(params)
 
 plt.rcParams['image.cmap'] = 'jet'
 
-target_ver_str = '1.1.1'
+target_ver_str = '1.0.0'
 
 min_nobs = 1
 # maskbits_dict = {'LRG': [1, 8, 9, 11, 12, 13], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
+maskbits_dict = {'LRG': [], 'ELG': [1, 11, 12, 13], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
 
-maskbits_dict = {'LRG': [], 'ELG': [], 'ELG_LOP': [], 'QSO': [1, 8, 9, 11, 12, 13], 'BGS_ANY': [1, 13], 'BGS_BRIGHT': [1, 13]}
-custom_mask_dict = {'LRG': 'lrgmask_v1.1', 'ELG': 'elgmask_v1', 'ELG_LOP': 'elgmask_v1', 'QSO': '', 'BGS_ANY': '', 'BGS_BRIGHT': ''}
+randoms_counts_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/counts'
+randoms_systematics_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
+target_densities_dir = '/Users/rongpu/Documents/Data/desi_targets/dr9.0/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
 
-randoms_counts_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/counts'
-randoms_systematics_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
+top_plot_dir = '/Users/rongpu/Documents/Work/DESI/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
 
-top_plot_dir = '/global/cfs/cdirs/desi/users/rongpu/imaging_sys/density_maps/{}/resolve'.format(target_ver_str)
-
+dpi_dict = {64: 200, 128: 200, 256: 600, 512: 1600}
+xsize_dict = {64: 8000, 128: 8000, 256: 12000, 512: 16000}
 vrange_dict = {'BGS_ANY': {64: [800, 2000], 128: [650, 2150], 256: [200, 2600], 512: [-200, 3000]},
                'BGS_BRIGHT': {64: [500, 1200], 128: [350, 1350], 256: [200, 1500], 512: [-200, 1800]},
                'LRG': {64: [300, 900], 128: [200, 1000], 256: [100, 1100], 512: [-200, 1400]},
                'ELG': {64: [1200, 3600], 128: [1200, 3600], 256: [1100, 3700], 512: [600, 4200]},
-               'ELG_LOP': {64: [1000, 2900], 128: [1000, 2900], 256: [900, 3000], 512: [500, 3400]},
                'QSO': {64: [150, 450], 128: [150, 450], 256: [0, 600], 512: [-200, 800]},
                }
 # vrange_dict = {64: [0, 1200], 128: [-200, 1400], 256: [-600, 1800]}
@@ -51,18 +46,17 @@ min_pix_frac = 0.2  # minimum fraction of pixel area to be used
 #     print(xnames[index], xlabels[index])
 
 
-for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'ELG_LOP', 'QSO']:
+for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'QSO']:
+
+    if target_class=='LRG':
+        lrgmask_str = '_lrgmask_v1'
+    else:
+        lrgmask_str = ''
 
     print(target_class)
-
-    maskbits = maskbits_dict[target_class]
-    custom_mask_name = custom_mask_dict[target_class]
-
-    mask_str = ''.join([str(tmp) for tmp in maskbits])
-    if custom_mask_name!='':
-        mask_str += '_' + custom_mask_name
-
     target_class = target_class.lower()
+
+    maskbits = maskbits_dict[target_class.upper()]
 
     for nside in [64, 128, 256, 512]:
 
@@ -72,20 +66,16 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'ELG_LOP', 'QSO']:
 
         field = 'combined'
 
-        plot_dir = os.path.join(top_plot_dir, '{}_{}_minobs_{}_maskbits_{}'.format(target_class, field, min_nobs, mask_str))
+        plot_dir = os.path.join(top_plot_dir, '{}_{}_minobs_{}_maskbits_{}'.format(target_class, field, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str))
         if not os.path.isdir(plot_dir):
             os.makedirs(plot_dir)
 
-        plot_path = os.path.join(plot_dir, 'density_{}_{}.png'.format(target_class, nside))
-        if os.path.isfile(plot_path):
-            continue
-
         for field in ['north', 'south']:
 
-            density = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, field, nside, min_nobs, mask_str)))
-            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, mask_str)))
+            density = Table.read(os.path.join(target_densities_dir, 'density_map_{}_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(target_class, field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
+            maps = Table.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
             maps = maps[maps['n_randoms']>0]
-            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, mask_str)))
+            maps1 = Table.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, ''.join([str(tmp) for tmp in maskbits])+lrgmask_str)))
             maps1.remove_columns(['RA', 'DEC'])
             maps = join(maps, maps1, join_type='inner', keys='HPXPIXEL')
             maps = join(maps, density[['HPXPIXEL', 'n_targets']], join_type='outer', keys='HPXPIXEL').filled(0)
@@ -131,7 +121,20 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'ELG_LOP', 'QSO']:
 
         maps['density'] = maps['n_targets'] / (pix_area * maps['FRACAREA'])
 
-        plot_map(nside, maps['HPXPIXEL'], maps['density'],
-                 vmin=vrange_dict[target_class.upper()][nside][0], vmax=vrange_dict[target_class.upper()][nside][1],
-                 title='{} NSIDE={}'.format(target_class.upper(), nside), save_path=plot_path, show=False)
+        plot_path = os.path.join(plot_dir, 'density_{}_{}{}.png'.format(target_class, nside, lrgmask_str))
 
+        # if os.path.isfile(plot_path):
+        #     continue
+
+        map_values = np.zeros(npix)
+        hp_mask = np.zeros(npix, dtype=bool)
+        map_values[maps['HPXPIXEL']] = maps['density']
+        hp_mask[maps['HPXPIXEL']] = True
+        mplot = hp.ma(map_values)
+        mplot.mask = ~hp_mask
+
+        plt.figure(figsize=(9.7, 6))
+        hp.mollview(mplot, min=vrange_dict[target_class.upper()][nside][0], max=vrange_dict[target_class.upper()][nside][1],
+                    rot=(120, 0, 0), fig=1, xsize=xsize_dict[nside], title='{} NSIDE={}'.format(target_class.upper(), nside))
+        plt.savefig(plot_path, dpi=dpi_dict[nside])
+        plt.close()
