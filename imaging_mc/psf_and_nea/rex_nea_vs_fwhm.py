@@ -1,4 +1,4 @@
-# Requires tractor
+# Use tractor to compute NEA as a function of seeing FWHM for REX objects
 # shifter --image docker:legacysurvey/legacypipe:DR10.0.0 /bin/bash
 
 import sys, os, glob, time, warnings, gc
