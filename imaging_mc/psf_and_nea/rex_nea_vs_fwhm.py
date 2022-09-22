@@ -1,4 +1,4 @@
-# Use tractor to compute NEA as a function of seeing FWHM for REX objects
+# Use tractor to compute NEA (in arcsec^2) as a function of seeing FWHM for REX objects
 # shifter --image docker:legacysurvey/legacypipe:DR10.0.0 /bin/bash
 
 import sys, os, glob, time, warnings, gc
@@ -53,7 +53,7 @@ for band in ['g', 'r', 'z']:
         with Pool(processes=n_processes) as pool:
             nea_list = pool.map(get_nea, shape_r_list, chunksize=1)
 
-        cat['nea'][index] = 0.262**2 * np.array(nea_list)
+        cat['nea'][index] = 0.262**2 * np.array(nea_list)  # in units of arcsec^2
 
     cat.remove_column('psf_mask')
     # cat.write()

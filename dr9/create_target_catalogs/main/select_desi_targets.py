@@ -5,7 +5,7 @@ from astropy.table import Table, vstack
 import fitsio
 
 
-def select_lrgs(cat, field='south'):
+def select_lrg(cat, field='south'):
 
     cat = cat.copy()
     cat.rename_columns(cat.colnames, [ii.upper() for ii in cat.colnames])
@@ -65,7 +65,7 @@ def select_lrgs(cat, field='south'):
     return mask_lrg
 
 
-def select_elgs(cat):
+def select_elg(cat):
 
     cat = cat.copy()
     cat.rename_columns(cat.colnames, [ii.upper() for ii in cat.colnames])
@@ -90,8 +90,33 @@ def select_elgs(cat):
     gmag = 22.5 - 2.5 * np.log10((cat['FLUX_G'] / cat['MW_TRANSMISSION_G']).clip(1e-7))
     rmag = 22.5 - 2.5 * np.log10((cat['FLUX_R'] / cat['MW_TRANSMISSION_R']).clip(1e-7))
     zmag = 22.5 - 2.5 * np.log10((cat['FLUX_Z'] / cat['MW_TRANSMISSION_Z']).clip(1e-7))
-    w1mag = 22.5 - 2.5 * np.log10((cat['FLUX_W1'] / cat['MW_TRANSMISSION_W1']).clip(1e-7))
     gfibermag = 22.5 - 2.5 * np.log10((cat['FIBERFLUX_G'] / cat['MW_TRANSMISSION_G']).clip(1e-7))
+
+    mask_elglop = np.full(len(cat), True)
+
+    mask_elglop &= gmag > 20                       # bright cut.
+    mask_elglop &= rmag - zmag > 0.15                  # blue cut.
+    mask_elglop &= gfibermag < 24.1  # faint cut.
+    mask_elglop &= gmag - rmag < 0.5*(rmag - zmag) + 0.1  # remove stars, low-z galaxies.
+
+    mask_elgvlo = mask_elglop.copy()
+
+    # ADM low-priority OII flux cut.
+    mask_elgvlo &= gmag - rmag < -1.2*(rmag - zmag) + 1.6
+    mask_elgvlo &= gmag - rmag >= -1.2*(rmag - zmag) + 1.3
+
+    # ADM high-priority OII flux cut.
+    mask_elglop &= gmag - rmag < -1.2*(rmag - zmag) + 1.3
+
+    return mask_elglop, mask_elgvlo
+
+
+def select_elg_simplified(cat):
+
+    gmag = cat['gmag']
+    rmag = cat['rmag']
+    zmag = cat['zmag']
+    gfibermag = cat['gfibermag']
 
     mask_elglop = np.full(len(cat), True)
 
