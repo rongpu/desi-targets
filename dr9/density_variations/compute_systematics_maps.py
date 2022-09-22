@@ -61,7 +61,7 @@ mask_dir = os.path.join('/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/'
 
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/{}/systematics'.format(resolve)
 
-hp_columns = ['EBV', 'galdepth_gmag', 'galdepth_rmag', 'galdepth_zmag', 'psfdepth_gmag', 'psfdepth_rmag', 'psfdepth_zmag', 'psfdepth_w1mag', 'psfdepth_w2mag', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'psfdepth_gmag_ebv', 'psfdepth_rmag_ebv', 'psfdepth_zmag_ebv', 'psfdepth_w1mag_ebv', 'psfdepth_w2mag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
+hp_columns = ['EBV', 'GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'PSFDEPTH_W1', 'PSFDEPTH_W2', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
 
 
 def apply_mask(randoms, min_nobs, maskbits, custom_mask_name):
@@ -146,24 +146,24 @@ if __name__ == '__main__':
 
     randoms = vstack(randoms_stack)
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        randoms['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9)
-        randoms['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9)
-        randoms['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9)
-        randoms['psfdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9)
-        randoms['psfdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9)
-        randoms['psfdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9)
-        randoms['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9)
-        randoms['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9)
-        randoms['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9) - 3.214*randoms['EBV']
-        randoms['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9) - 2.165*randoms['EBV']
-        randoms['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9) - 1.211*randoms['EBV']
-        randoms['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9) - 3.214*randoms['EBV']
-        randoms['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9) - 2.165*randoms['EBV']
-        randoms['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9) - 1.211*randoms['EBV']
-        randoms['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9) - 0.184*randoms['EBV']
-        randoms['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9) - 0.113*randoms['EBV']
+    # with warnings.catch_warnings():
+    #     warnings.simplefilter("ignore")
+    #     randoms['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9)
+    #     randoms['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9)
+    #     randoms['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9)
+    #     randoms['psfdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9)
+    #     randoms['psfdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9)
+    #     randoms['psfdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9)
+    #     randoms['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9)
+    #     randoms['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9)
+    #     randoms['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_G'])))-9) - 3.214*randoms['EBV']
+    #     randoms['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_R'])))-9) - 2.165*randoms['EBV']
+    #     randoms['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['GALDEPTH_Z'])))-9) - 1.211*randoms['EBV']
+    #     randoms['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_G'])))-9) - 3.214*randoms['EBV']
+    #     randoms['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_R'])))-9) - 2.165*randoms['EBV']
+    #     randoms['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_Z'])))-9) - 1.211*randoms['EBV']
+    #     randoms['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W1'])))-9) - 0.184*randoms['EBV']
+    #     randoms['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(randoms['PSFDEPTH_W2'])))-9) - 0.113*randoms['EBV']
 
     print('Loading complete!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
 

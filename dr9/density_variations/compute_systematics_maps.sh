@@ -1,8 +1,10 @@
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_systematics_maps.py south
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python compute_systematics_maps.py north
+# salloc -N 1 -C cpu -q interactive -t 4:00:00
 
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python test.py south
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python test.py north
+# python compute_systematics_maps.py south
+# python compute_systematics_maps.py north
 
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python test1.py south
-srun -N 1 -C haswell -c 64 -t 04:00:00 -L cfs -q interactive python test1.py north
+python test.py south
+python test.py north
+
+python test1.py south
+python test1.py north

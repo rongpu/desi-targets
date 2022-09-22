@@ -51,5 +51,24 @@ for nside in [64, 128, 256, 512]:
 
         maps['STARDENS'] = stardens[maps['HPXPIXEL']]
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            maps['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_G'])))-9)
+            maps['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_R'])))-9)
+            maps['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_Z'])))-9)
+            maps['psfdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_G'])))-9)
+            maps['psfdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_R'])))-9)
+            maps['psfdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_Z'])))-9)
+            maps['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9)
+            maps['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9)
+            maps['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_G'])))-9) - 3.214*maps['EBV']
+            maps['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_R'])))-9) - 2.165*maps['EBV']
+            maps['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_Z'])))-9) - 1.211*maps['EBV']
+            maps['psfdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_G'])))-9) - 3.214*maps['EBV']
+            maps['psfdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_R'])))-9) - 2.165*maps['EBV']
+            maps['psfdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_Z'])))-9) - 1.211*maps['EBV']
+            maps['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9) - 0.184*maps['EBV']
+            maps['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9) - 0.113*maps['EBV']
+
         maps.write(output_path)
 
