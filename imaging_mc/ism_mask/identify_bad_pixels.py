@@ -51,4 +51,4 @@ tt = Table()
 tt['HPXPIXEL'] = bad_pixels
 mask = np.in1d(tt['HPXPIXEL'], tmp)
 tt['CORE'] = mask.copy()
-tt.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/ism_mask/bad_pixels_v1_512_ring.fits')
+tt.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/ism_mask/bad_pixels_v1_{}_ring.fits'.format(nside*2))

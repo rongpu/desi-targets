@@ -6,6 +6,7 @@ from astropy.table import Table, vstack, hstack, join
 import fitsio
 # from astropy.io import fits
 
+import healpy as hp
 from multiprocessing import Pool
 from scipy.interpolate import RectBivariateSpline
 
@@ -73,6 +74,9 @@ def elgsim():
         replace = False
     else:
         replace = True
+
+    np.random.seed((os.getpid() * int(time.time()*1000)) % 123456789)
+
     idx = np.random.choice(len(truth), size=len(cat), replace=replace)
     sim = quicksim(truth[idx], cat)
 
@@ -80,8 +84,6 @@ def elgsim():
 
     return elglop, elgvlo
 
-
-# def count_elg(repeats=1, random_seed=None):
 
 truth = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/subsets/cosmos_truth_clean.fits'))
 print('truth', len(truth))
@@ -103,25 +105,93 @@ print('truth', len(truth))
 # Only keep necessary columns to save memory
 truth = truth[['flux_g_ec', 'flux_r_ec', 'flux_z_ec', 'fiberflux_g_ec', 'shape_r']]
 
-cat_north = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/combined/pixmap_north_nside_128_minobs_1_maskbits__elgmask_v1.fits'))
-cat_south = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/combined/pixmap_south_nside_128_minobs_1_maskbits__elgmask_v1.fits'))
-mask = (cat_north['DEC']>32.375)
-cat_north = cat_north[mask]
-mask = ~np.in1d(cat_south['HPXPIXEL'], cat_north['HPXPIXEL'])
-cat = vstack([cat_north, cat_south[mask]])
-print('cat', len(cat))
-cat.rename_columns(cat.colnames, [ii.lower() for ii in cat.colnames])
+# cat_north = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/combined/pixmap_north_nside_128_minobs_1_maskbits__elgmask_v1.fits'))
+# cat_south = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/combined/pixmap_south_nside_128_minobs_1_maskbits__elgmask_v1.fits'))
+# cat_north['PHOTSYS'] = 'N'
+# cat_south['PHOTSYS'] = 'S'
+# mask = (cat_north['DEC']>32.375)
+# cat_north = cat_north[mask]
+# mask = ~np.in1d(cat_south['HPXPIXEL'], cat_north['HPXPIXEL'])
+# cat = vstack([cat_north, cat_south[mask]])
+# print('cat', len(cat))
 
-# np.random.seed(8888)
-repeats = int(1e6)
+n_randoms_catalogs = 4
+columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'EBV', 'PHOTSYS']
 
+randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
+randoms_paths = randoms_paths[:n_randoms_catalogs]
+
+for randoms_path in randoms_paths:
+    print(randoms_path)
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns))
+    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/elgmask_v1/'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz')))
+    cat = hstack([cat, cat1])
+    min_nobs = 1
+    mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+    print('cat', len(cat))
+    mask = cat['elg_mask']==0
+    cat = cat[mask]
+    print('cat', len(cat))
+
+    cat.rename_columns(cat.colnames, [ii.lower() for ii in cat.colnames])
+
+    repeats = int(128)
+
+    with Pool(processes=n_processes) as pool:
+        res = pool.starmap(elgsim, [[]]* repeats)
+    res = np.array(res, dtype=int)
+    elglop_count, elgvlo_count = np.sum(res[:, 0], axis=0), np.sum(res[:, 1], axis=0)
+
+    mc = Table()
+    mc['ra'] = cat['ra']
+    mc['dec'] = cat['dec']
+    mc['photsys'] = cat['photsys']
+    mc['elglop'] = elglop_count
+    mc['elgvlo'] = elgvlo_count
+    mc.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz'), overwrite=True)
+
+################################################# Healpix density map ###########################################################
+
+def healpix_stats(pix_idx):
+
+    pix_list = pix_unique[pix_idx]
+
+    hp_table = Table()
+    hp_table['HPXPIXEL'] = pix_list
+    hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
+    hp_table['elglop'] = np.zeros(len(hp_table), dtype=int)
+    hp_table['elgvlo'] = np.zeros(len(hp_table), dtype=int)
+
+    for index in np.arange(len(pix_idx)):
+
+        idx = pixorder[pixcnts[pix_idx[index]]:pixcnts[pix_idx[index]+1]]
+        hp_table['elglop'][index] = np.sum(mc['elglop'][idx])
+        hp_table['elgvlo'][index] = np.sum(mc['elgvlo'][idx])
+
+    return hp_table
+
+
+nside = 128
+
+mc_stack = []
+for randoms_path in randoms_paths:
+    mc_stack.append(Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz'))))
+mc = vstack(mc_stack)
+
+pix_allobj = hp.pixelfunc.ang2pix(nside, mc['ra'], mc['dec'], nest=False, lonlat=True)
+pix_unique, pix_count = np.unique(pix_allobj, return_counts=True)
+pixcnts = pix_count.copy()
+pixcnts = np.insert(pixcnts, 0, 0)
+pixcnts = np.cumsum(pixcnts)
+pixorder = np.argsort(pix_allobj)
+# split among the processors
+pix_idx_split = np.array_split(np.arange(len(pix_unique)), n_processes)
+# start multiple worker processes
 with Pool(processes=n_processes) as pool:
-    res = pool.starmap(elgsim, [[]]* repeats)
-res = np.array(res, dtype=int)
-elglop_count, elgvlo_count = np.sum(res[:, 0], axis=0), np.sum(res[:, 1], axis=0)
+    res = pool.map(healpix_stats, pix_idx_split)
+hp_table = vstack(res)
+hp_table.sort('HPXPIXEL')
+hp_table['n_randoms'] = pix_count
 
-tt = Table()
-tt['elglop'] = elglop_count
-tt['elgvlop'] = elgvlo_count
-tt.write('/global/u2/r/rongpu/temp/data/mc_elg.fits', overwrite=True)
+hp_table.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_randoms_elgmask_v1_healpix_{}.fits'.format(nside), overwrite=True)
 
