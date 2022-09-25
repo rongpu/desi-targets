@@ -15,6 +15,7 @@ from select_desi_targets import select_elg_simplified
 
 
 n_processes = 128
+repeats = 256
 
 # from https://www.legacysurvey.org/dr9/catalogs/#galactic-extinction-coefficients
 ext_coeffs = {'u': 3.995, 'g': 3.214, 'r': 2.165, 'i': 1.592, 'z': 1.211, 'y': 1.064}
@@ -68,7 +69,7 @@ def quicksim(truth, cat):
     return sim
 
 
-def elgsim():
+def elgsim(foo):
 
     if len(cat)<=len(truth):
         replace = False
@@ -115,7 +116,7 @@ truth = truth[['flux_g_ec', 'flux_r_ec', 'flux_z_ec', 'fiberflux_g_ec', 'shape_r
 # cat = vstack([cat_north, cat_south[mask]])
 # print('cat', len(cat))
 
-n_randoms_catalogs = 4
+n_randoms_catalogs = 32
 columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z', 'PSFDEPTH_G', 'PSFDEPTH_R', 'PSFDEPTH_Z', 'EBV', 'PHOTSYS']
 
 randoms_paths = sorted(glob.glob('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-[0-9]*.fits'))
@@ -123,11 +124,20 @@ randoms_paths = randoms_paths[:n_randoms_catalogs]
 
 for randoms_path in randoms_paths:
     print(randoms_path)
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve/randoms-1-0.fits', columns=columns))
-    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/elgmask_v1/'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz')))
+
+    output_path = '/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits')
+    # output_path = '/pscratch/sd/r/rongpu/imaging_mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits')
+    if os.path.isfile(output_path):
+        continue
+
+    cat = Table(fitsio.read(randoms_path, columns=columns))
+    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/desi_mask/randoms/elgmask_v1/'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits')))
     cat = hstack([cat, cat1])
     min_nobs = 1
     mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+    mask &= (cat['PSFDEPTH_G']>0) & (cat['PSFDEPTH_R']>0) & (cat['PSFDEPTH_Z']>0)
+    mask &= (cat['PSFSIZE_G']>0) & (cat['PSFSIZE_R']>0) & (cat['PSFSIZE_Z']>0)
+    cat = cat[mask]
     print('cat', len(cat))
     mask = cat['elg_mask']==0
     cat = cat[mask]
@@ -135,12 +145,16 @@ for randoms_path in randoms_paths:
 
     cat.rename_columns(cat.colnames, [ii.lower() for ii in cat.colnames])
 
-    repeats = int(128)
-
-    with Pool(processes=n_processes) as pool:
-        res = pool.starmap(elgsim, [[]]* repeats)
-    res = np.array(res, dtype=int)
-    elglop_count, elgvlo_count = np.sum(res[:, 0], axis=0), np.sum(res[:, 1], axis=0)
+    elglop_count, elgvlo_count = np.zeros(len(cat), dtype=int), np.zeros(len(cat), dtype=int)
+    counter = repeats
+    while counter>0:
+        with Pool(processes=n_processes) as pool:
+            res = pool.map(elgsim, np.zeros(np.minimum(counter, n_processes)))
+        counter = np.maximum(counter-n_processes, 0)
+        res = np.array(res, dtype=int)
+        elglop_count += np.sum(res[:, 0], axis=0)
+        elgvlo_count += np.sum(res[:, 1], axis=0)
+        del res
 
     mc = Table()
     mc['ra'] = cat['ra']
@@ -148,7 +162,7 @@ for randoms_path in randoms_paths:
     mc['photsys'] = cat['photsys']
     mc['elglop'] = elglop_count
     mc['elgvlo'] = elgvlo_count
-    mc.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz'), overwrite=True)
+    mc.write(output_path, overwrite=True)
 
 ################################################# Healpix density map ###########################################################
 
@@ -175,7 +189,9 @@ nside = 128
 
 mc_stack = []
 for randoms_path in randoms_paths:
-    mc_stack.append(Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits.gz'))))
+    output_path = '/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits')
+    # output_path = '/pscratch/sd/r/rongpu/imaging_mc/mc_elg_'+os.path.basename(randoms_path).replace('.fits', '-elgmask_v1.fits')
+    mc_stack.append(Table(fitsio.read(output_path)))
 mc = vstack(mc_stack)
 
 pix_allobj = hp.pixelfunc.ang2pix(nside, mc['ra'], mc['dec'], nest=False, lonlat=True)
@@ -194,4 +210,5 @@ hp_table.sort('HPXPIXEL')
 hp_table['n_randoms'] = pix_count
 
 hp_table.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/mc/mc_elg_randoms_elgmask_v1_healpix_{}.fits'.format(nside), overwrite=True)
+# hp_table.write('/pscratch/sd/r/rongpu/imaging_mc/mc_elg_randoms_elgmask_v1_healpix_{}.fits'.format(nside), overwrite=True)
 

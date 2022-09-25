@@ -1,36 +1,32 @@
 from __future__ import division, print_function
 import os
 import numpy as np
+from astropy.table import Table, vstack, hstack
+import healpy as hp
 
-# Anand Raichoor's code for checking if ra, dec are in the DES footprint
-def get_isdes(ra, dec, nside):
-    import pymangle
-    import healpy as hp
-    
-    npix = hp.nside2npix(nside)
-    # checking hp pixels
-    mng = pymangle.Mangle(os.path.expanduser('~/git/desi-targets/useful/des.ply'))
-    theta, phi = hp.pix2ang(nside, np.arange(npix), nest=False)
-    hpra, hpdec= 180./np.pi*phi, 90.-180./np.pi*theta
-    hpindes = (mng.polyid(hpra, hpdec)!=-1).astype(int)
-    # pixels with all neighbours in des
-    hpindes_secure = np.array([i for i in range(npix) if hpindes[i]+hpindes[hp.get_all_neighbours(nside, i)].sum()==9])
-    # pixels with all neighbours outside des
-    hpoutdes_secure = np.array([i for i in range(npix) if hpindes[i]+hpindes[hp.get_all_neighbours(nside, i)].sum()==0])
-    # hpind to be checked
-    tmp = np.ones(npix, dtype=bool)
-    tmp[hpindes_secure] = False
-    tmp[hpoutdes_secure]= False
-    hp_tbc = np.arange(npix)[tmp]
 
-    # now checking indiv. obj. in the tbc pixels
-    hppix = hp.ang2pix(nside, (90.-dec)*np.pi/180., ra*np.pi/180., nest=False)
-    hpind = np.unique(hppix)
+# # Anand Raichoor's code for checking if ra, dec are in the DES footprint
+# import pymangle
+# for nside in [32, 64, 128, 256, 512, 1024]:
+#     npix = hp.nside2npix(nside)
+#     hp_ra, hp_dec = hp.pix2ang(nside, np.arange(npix), nest=False, lonlat=True)
 
-    isdes = np.zeros(len(ra), dtype=bool)
-    isdes[np.in1d(hppix, hpindes_secure)] = True
-    tbc = np.where(np.in1d(hppix, hp_tbc))[0]
-    tbcisdes = (mng.polyid(ra[tbc], dec[tbc])!=-1)
-    isdes[tbc][tbcisdes] = True
+#     # checking hp pixels
+#     mng = pymangle.Mangle(os.path.expanduser('~/git/desi-targets/useful/in_des/des.ply'))
+#     theta, phi = hp.pix2ang(nside, np.arange(npix), nest=False)
+#     hp_ra, hpd_ec= 180./np.pi*phi, 90.-180./np.pi*theta
+#     indes = mng.polyid(hp_ra, hpd_ec)!=-1
+
+#     cat = Table()
+#     cat['in_des'] = indes
+#     cat.write(os.path.expanduser('~/git/desi-targets/useful/in_des/hp_in_des_{}_ring.fits.gz'.format(nside)))
+
+
+def get_isdes(ra, dec, nside=256):
+
+    hpix = hp.ang2pix(nside, ra, dec, nest=False, lonlat=True)
+    cat = Table.read('/Users/rongpu/git/desi-targets/useful/in_des/hp_in_des_{}_ring.fits.gz'.format(nside))
+    isdes = np.array(cat['in_des'][hpix])
 
     return isdes
+
