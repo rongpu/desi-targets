@@ -25,7 +25,7 @@ import healpy as hp
 def get_isdes(ra, dec, nside=256):
 
     hpix = hp.ang2pix(nside, ra, dec, nest=False, lonlat=True)
-    cat = Table.read('/Users/rongpu/git/desi-targets/useful/in_des/hp_in_des_{}_ring.fits.gz'.format(nside))
+    cat = Table.read(os.path.expanduser('~/git/desi-targets/useful/in_des/hp_in_des_{}_ring.fits.gz'.format(nside)))
     isdes = np.array(cat['in_des'][hpix])
 
     return isdes
