@@ -111,8 +111,8 @@ def get_sky_residual_in_healpix(pix_coarse):
             mask = (cat['NOBS_'+band_cap][idx]>0) & (cat['FLUX_IVAR_'+band_cap][idx]>0)
             if np.sum(mask)>0:
                 hp_table['nsource_'+band][index] = np.sum(mask)
-                hp_table['sky_median_'+band][index] = np.median(cat['sky_'+band][idx][mask])
-                hp_table['sky_nmad_'+band][index] = nmad(cat['sky_'+band][idx][mask])
+                hp_table['sky_median_'+band][index] = np.median(cat['sky_'+band][idx][mask])  # in units of nanomaggies per sq. arcsec.
+                hp_table['sky_nmad_'+band][index] = nmad(cat['sky_'+band][idx][mask])  # in units of nanomaggies per sq. arcsec.
 
     output_path = '/global/cfs/cdirs/desi/users/rongpu/imaging_mc/ism_mask/tmp/sky_resid_map_{}_{}_{}.fits'.format(nside, field, pix_coarse)
 
