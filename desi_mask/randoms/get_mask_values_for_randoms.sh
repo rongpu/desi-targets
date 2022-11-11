@@ -1,0 +1,4 @@
+srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /pscratch/sd/r/rongpu/tmp/randoms_group_0.fits --output /pscratch/sd/r/rongpu/tmp/randoms_group_0-lrgmask_v1.1.fits.gz
+srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /pscratch/sd/r/rongpu/tmp/randoms_group_1.fits --output /pscratch/sd/r/rongpu/tmp/randoms_group_1-lrgmask_v1.1.fits.gz
+srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /pscratch/sd/r/rongpu/tmp/randoms_group_2.fits --output /pscratch/sd/r/rongpu/tmp/randoms_group_2-lrgmask_v1.1.fits.gz
+srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /pscratch/sd/r/rongpu/tmp/randoms_group_3.fits --output /pscratch/sd/r/rongpu/tmp/randoms_group_3-lrgmask_v1.1.fits.gz

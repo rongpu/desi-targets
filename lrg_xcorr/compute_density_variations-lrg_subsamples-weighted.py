@@ -1,0 +1,102 @@
+# srun -N 1 -C cpu -c 128 -t 04:00:00 -L cfs -q interactive python compute_density_variations-lrg_subsamples-weighted.py
+
+from __future__ import division, print_function
+import sys, os, glob, time, warnings, gc
+import numpy as np
+from astropy.table import Table, vstack, hstack
+import fitsio
+
+from multiprocessing import Pool
+import healpy as hp
+
+import yaml
+
+n_processes = 128
+
+min_nobs = 2
+
+nsides = [64, 128, 256, 512]
+# nsides = [64]
+
+weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg/main_lrg_linear_coeffs_pz.yaml'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/main_lrg/linear_weights'
+
+
+def get_weighted_counts(pix_idx):
+
+    pix_list = pix_unique[pix_idx]
+
+    hp_table = Table()
+    hp_table['HPXPIXEL'] = pix_list
+    hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
+    hp_table['n_targets'] = 0.
+
+    for index in np.arange(len(pix_idx)):
+
+        idx = pixorder[pixcnts[pix_idx[index]]:pixcnts[pix_idx[index]+1]]
+        hp_table['n_targets'][index] = np.sum(weights[idx])
+
+    return hp_table
+
+
+if __name__ == '__main__':
+
+    print('Start!')
+
+    time_start = time.time()
+
+    # Load LRG catalog
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221102.fits'))
+    cat_weights = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221102-weights.fits'))
+    cat = hstack([cat, cat_weights], join_type='exact')
+
+    mask = (cat['PIXEL_NOBS_G']>=min_nobs) & (cat['PIXEL_NOBS_R']>=min_nobs) & (cat['PIXEL_NOBS_Z']>=min_nobs)
+    mask &= cat['lrg_mask']==0
+    cat = cat[mask]
+
+    for field in ['north', 'south']:
+
+        if field=='south':
+            photsys = 'S'
+        elif field=='north':
+            photsys = 'N'
+
+        # Load weights
+        with open(weights_path, "r") as f:
+            linear_coeffs = yaml.safe_load(f)
+
+        ############################## photo-z bins ##############################
+
+        for bin_index in range(1, 5):  # 4 bins
+
+            mask = cat['PHOTSYS']==photsys
+            mask &= cat['pz_bin']==bin_index
+            weights = cat['weight'][mask].copy()
+
+            for nside in nsides:
+                output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}-lw.fits'.format(bin_index, field, nside, min_nobs))
+                if os.path.isfile(output_path):
+                    continue
+                npix = hp.nside2npix(nside)
+
+                pix_allobj = hp.pixelfunc.ang2pix(nside, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
+                pix_unique, pixcnts = np.unique(pix_allobj, return_counts=True)
+
+                pixcnts = np.insert(pixcnts, 0, 0)
+                pixcnts = np.cumsum(pixcnts)
+
+                pixorder = np.argsort(pix_allobj)
+
+                # split among the Cori processors
+                pix_idx_split = np.array_split(np.arange(len(pix_unique)), n_processes)
+
+                # start multiple worker processes
+                with Pool(processes=n_processes) as pool:
+                    res = pool.map(get_weighted_counts, pix_idx_split)
+
+                hp_table = vstack(res)
+                hp_table.sort('HPXPIXEL')
+
+                hp_table.write(output_path)
+
+    print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

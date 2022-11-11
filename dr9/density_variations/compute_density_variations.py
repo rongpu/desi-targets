@@ -1,4 +1,4 @@
-# The the pixel-level NOBS instead of the tractor NOBS
+# Use the pixel-level NOBS instead of the tractor NOBS
 # Example:
 # python compute_density_variations.py LRG south
 
@@ -37,8 +37,8 @@ custom_mask_dict = {'LRG': 'lrgmask_v1.1', 'ELG': 'elgmask_v1', 'ELG_LOP': 'elgm
 # nsides = [64, 128, 256, 512, 1024]
 nsides = [64, 128, 256, 512]
 
-target_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS']
-pix_columns = ['PIXEL_NOBS_G', 'PIXEL_NOBS_R', 'PIXEL_NOBS_Z']
+# target_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS']
+# pix_columns = ['PIXEL_NOBS_G', 'PIXEL_NOBS_R', 'PIXEL_NOBS_Z']
 
 if 'BGS' in target_class:
     target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/1.1.1/targets/main/resolve/bright'
@@ -65,7 +65,6 @@ else:
 
 def apply_mask(cat, min_nobs, maskbits, custom_mask_name):
 
-    mask = (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
     mask = (cat['PIXEL_NOBS_G']>=min_nobs) & (cat['PIXEL_NOBS_R']>=min_nobs) & (cat['PIXEL_NOBS_Z']>=min_nobs)
 
     mask_clean = np.ones(len(cat), dtype=bool)
