@@ -15,7 +15,7 @@ print('Start!')
 time_start = time.time()
 
 # Load LRG catalog
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221102.fits'))
+cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'))
 sweep_2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_sweep_2.fits',
                 columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
 print(len(cat)==len(sweep_2))
@@ -74,6 +74,6 @@ for field in ['north', 'south']:
         cat['weight'][mask_bin] = weights
 
 cat = cat[['weight']]
-cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221102-weights.fits', overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204-weights.fits', overwrite=True)
 
 print('Done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))

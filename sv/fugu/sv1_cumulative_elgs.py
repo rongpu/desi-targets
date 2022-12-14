@@ -1,5 +1,4 @@
-# Create combined SV1 perexp ELG catalog
-# The same script also works for 1x_depth, 4x_depth and lowspeed coadds
+# Create combined SV1 cumulative ELG catalog
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -15,7 +14,6 @@ import fitsio
 coadd_type = 'cumulative'
 # coadd_type = '1x_depth'
 # coadd_type = '4x_depth'
-# coadd_type = 'lowspeed'
 
 tiles = Table(fitsio.read('/global/cfs/cdirs/desi/survey/observations/SV1/sv1-tiles.fits'))
 print(len(tiles))
@@ -29,7 +27,7 @@ print(len(tiles))
 columns_1 = ['TARGETID', 'CHI2', 'Z', 'ZERR', 'ZWARN', 'SPECTYPE', 'DELTACHI2']
 columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'SV1_DESI_TARGET', 'SV1_BGS_TARGET', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE']
 columns_4 = ['TARGETID', 'TSNR2_ELG', 'TSNR2_BGS', 'TSNR2_QSO', 'TSNR2_LRG']
-emline_columns = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
+columns_emline = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
 
 tileid_list = tiles['TILEID']
 
@@ -59,7 +57,7 @@ for tileid in tileid_list:
         tmp2 = Table(fitsio.read(fn, ext=2, columns=columns_2))
         tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
         emline_fn = fn.replace('redrock-', 'emline-')
-        tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(emline_columns)))
+        tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(columns_emline)))
 
         if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID'])):
             raise ValueError
@@ -107,12 +105,8 @@ cat = join(cat, elg, keys='TARGETID')
 
 ############################ Add main ELG flag ############################
 
-main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
-
-elg = []
-for field in ['north', 'south']:
-    elg.append(Table(fitsio.read(os.path.join(main_dir, 'dr9_elg_{}_1.0.0_basic.fits'.format(field)), columns=['TARGETID'])))
-elg = vstack(elg)
+main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
+elg = Table(fitsio.read(os.path.join(main_dir, 'dr9_elg_1.1.1_basic.fits'), columns=['TARGETID']))
 
 mask = np.in1d(cat['TARGETID'], elg['TARGETID'])
 cat['main_elg'] = False

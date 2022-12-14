@@ -35,7 +35,7 @@ for bin_index in range(len(pz_cuts)-1):
 cat = cat[columns_to_keep]
 print(len(cat))
 
-output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221102.fits'
+output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'
 print(output_path)
 
 cat.write(output_path, overwrite=True)

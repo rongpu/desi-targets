@@ -1,4 +1,4 @@
-# Create combined SV3 cumulative BGS catalog
+# Create combined SV3 cumulative QSO catalog
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -15,7 +15,7 @@ coadd_type = 'cumulative'
 
 tiles = Table.read('/global/cfs/cdirs/desi/survey/ops/surveyops/trunk/ops/tiles-sv3.ecsv')
 print(len(tiles))
-mask = tiles['PROGRAM']=='BRIGHT'
+mask = tiles['PROGRAM']=='DARK'
 tiles = tiles[mask]
 print(len(tiles))
 
@@ -27,6 +27,8 @@ columns_1 = ['TARGETID', 'CHI2', 'Z', 'ZERR', 'ZWARN', 'SPECTYPE', 'DELTACHI2']
 columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'SV3_DESI_TARGET', 'SV3_BGS_TARGET', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE']
 columns_4 = ['TARGETID', 'TSNR2_ELG', 'TSNR2_BGS', 'TSNR2_QSO', 'TSNR2_LRG']
 columns_emline = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
+columns_qso_mgii = ['TARGETID', 'IS_QSO_MGII']
+columns_qso_qn = ['TARGETID', 'Z_NEW', 'ZERR_NEW', 'IS_QSO_QN_NEW_RR', 'C_LYA', 'C_CIV', 'C_CIII', 'C_MgII', 'C_Hbeta', 'C_Halpha']
 
 tileid_list = tiles['TILEID']
 
@@ -49,25 +51,32 @@ for tileid in tileid_list:
         raise ValueError('Does not exist: '+tile_dir)
 
     fn_list = sorted(glob.glob(os.path.join(data_dir, str(tileid), '*/redrock-*.fits')))
+
     for fn in fn_list:
         tmp1 = Table(fitsio.read(fn, ext=1, columns=columns_1))
         tmp2 = Table(fitsio.read(fn, ext=2, columns=columns_2))
         tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
         emline_fn = fn.replace('redrock-', 'emline-')
+        qso_mgii_fn = fn.replace('redrock-', 'qso_mgii-')
+        qso_qn_fn = fn.replace('redrock-', 'qso_qn-')
         tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(columns_emline)))
+        tmp6 = Table(fitsio.read(qso_mgii_fn, ext=1, columns=(columns_qso_mgii)))
+        tmp7 = Table(fitsio.read(qso_qn_fn, ext=1, columns=(columns_qso_qn)))
 
-        if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID'])):
+        if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID']) and np.all(tmp1['TARGETID']==tmp6['TARGETID']) and np.all(tmp1['TARGETID']==tmp7['TARGETID'])):
             raise ValueError
         tmp = tmp1.copy()
         tmp = join(tmp, tmp2, keys='TARGETID')
         tmp = join(tmp, tmp4, keys='TARGETID')
         tmp = join(tmp, tmp5, keys='TARGETID')
+        tmp = join(tmp, tmp6, keys='TARGETID')
+        tmp = join(tmp, tmp7, keys='TARGETID')
 
-        mask = tmp['SV3_DESI_TARGET'] & 2**60 > 0
+        mask = tmp['SV3_DESI_TARGET'] & 2**2 > 0
         tmp = tmp[mask]
 
         if len(tmp)==0:
-            print('No BGS targets: ', fn)
+            print('No QSOs: ', fn)
             continue
 
         tmp['LASTNIGHT'] = lastnight
@@ -79,33 +88,15 @@ cat = vstack(cat_stack)
 print()
 print(len(cat))
 
-############################ Add LRG mask ############################
-
-sv3_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
-
-lrg = []
-for field in ['north', 'south']:
-    tmp = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_lrg_{}_0.57.0_basic.fits'.format(field)), columns=['TARGETID']))
-    tmp1 = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_lrg_{}_0.57.0_lrgmask_v1.fits'.format(field))))
-    lrg.append(hstack([tmp, tmp1]))
-lrg = vstack(lrg)
-
-mask = np.in1d(lrg['TARGETID'], cat['TARGETID'])
-lrg = lrg[mask]
-
-cat = join(cat, lrg, keys='TARGETID')
-
-############################ Add main BGS flag ############################
+############################ Add main QSO flag ############################
 
 main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
-bgs = Table(fitsio.read(os.path.join(main_dir, 'dr9_bgs_1.1.1_basic.fits'), columns=['TARGETID', 'BGS_TARGET']))
+qso = Table(fitsio.read(os.path.join(main_dir, 'dr9_qso_1.1.1_basic.fits'), columns=['TARGETID']))
 
-cat['main_bgs_any'] = np.in1d(cat['TARGETID'], bgs['TARGETID'])
-bgs_faint = bgs['BGS_TARGET'] & 2**0 > 0
-bgs_bright = bgs['BGS_TARGET'] & 2**1 > 0
-cat['main_bgs_faint'] = np.in1d(cat['TARGETID'], bgs['TARGETID'][bgs_faint])
-cat['main_bgs_bright'] = np.in1d(cat['TARGETID'], bgs['TARGETID'][bgs_bright])
+mask = np.in1d(cat['TARGETID'], qso['TARGETID'])
+cat['main_qso'] = False
+cat['main_qso'][mask] = True
 
 #############################################################################
 
-cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/fugu/sv3_{}_bgs.fits'.format(coadd_type), overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/fugu/sv3_{}_qso.fits'.format(coadd_type), overwrite=False)

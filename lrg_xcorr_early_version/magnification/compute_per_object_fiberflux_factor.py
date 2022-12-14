@@ -11,7 +11,7 @@ from scipy.interpolate import griddata
 columns = ['MASKBITS', 'RA', 'DEC', 'TYPE', 'EBV', 'FLUX_Z', 'FIBERFLUX_Z', 'SHAPE_R', 'SHAPE_E1', 'SHAPE_E2', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'SERSIC']
 
 for field in ['north', 'south']:
-    
+
     cat = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), columns=columns))
 
     # axis ratio
@@ -124,14 +124,14 @@ for field in ['north', 'south']:
     print('SER-EXP')
     mask_ser_exp = mask_ser & (cat['SERSIC']<2.5)
 
-    f_ratio = f_ratio_interp_exp(cat['SHAPE_R'][mask_ser_exp], cat['q'][mask_ser_exp])    
+    f_ratio = f_ratio_interp_exp(cat['SHAPE_R'][mask_ser_exp], cat['q'][mask_ser_exp])
     mask = np.isnan(f_ratio)
     print('nan', np.sum(mask), np.sum(mask)/np.sum(mask_ser))
     # f_ratio[mask] = np.median(f_ratio[~mask])
     print(np.nanmedian(f_ratio))
     cat['ff_ratio'][mask_ser_exp] = f_ratio
 
-    f_factor = f_factor_interp_exp(cat['SHAPE_R'][mask_ser_exp], cat['q'][mask_ser_exp])    
+    f_factor = f_factor_interp_exp(cat['SHAPE_R'][mask_ser_exp], cat['q'][mask_ser_exp])
     mask = np.isnan(f_factor)
     print('nan', np.sum(mask), np.sum(mask)/np.sum(mask_ser))
     f_factor[mask] = np.median(f_factor[~mask])
@@ -141,14 +141,14 @@ for field in ['north', 'south']:
     print('SER-DEV')
     mask_ser_dev = mask_ser & (cat['SERSIC']>=2.5)
 
-    f_ratio = f_ratio_interp_dev(cat['SHAPE_R'][mask_ser_dev], cat['q'][mask_ser_dev])    
+    f_ratio = f_ratio_interp_dev(cat['SHAPE_R'][mask_ser_dev], cat['q'][mask_ser_dev])
     mask = np.isnan(f_ratio)
     print('nan', np.sum(mask), np.sum(mask)/np.sum(mask_ser))
     # f_ratio[mask] = np.median(f_ratio[~mask])
     print(np.nanmedian(f_ratio))
     cat['ff_ratio'][mask_ser_dev] = f_ratio
 
-    f_factor = f_factor_interp_dev(cat['SHAPE_R'][mask_ser_dev], cat['q'][mask_ser_dev])    
+    f_factor = f_factor_interp_dev(cat['SHAPE_R'][mask_ser_dev], cat['q'][mask_ser_dev])
     mask = np.isnan(f_factor)
     print('nan', np.sum(mask), np.sum(mask)/np.sum(mask_ser))
     f_factor[mask] = np.median(f_factor[~mask])

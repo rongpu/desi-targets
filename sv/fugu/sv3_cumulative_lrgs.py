@@ -26,7 +26,7 @@ print(len(tiles))
 columns_1 = ['TARGETID', 'CHI2', 'Z', 'ZERR', 'ZWARN', 'SPECTYPE', 'DELTACHI2']
 columns_2 = ['TARGETID', 'PETAL_LOC', 'DEVICE_LOC', 'LOCATION', 'FIBER', 'COADD_FIBERSTATUS', 'TARGET_RA', 'TARGET_DEC', 'MORPHTYPE', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'PARALLAX', 'EBV', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_G', 'FIBERFLUX_R', 'FIBERFLUX_Z', 'MASKBITS', 'PHOTSYS', 'SV3_DESI_TARGET', 'SV3_BGS_TARGET', 'DESI_TARGET', 'BGS_TARGET', 'TILEID', 'COADD_NUMEXP', 'COADD_EXPTIME', 'COADD_NUMNIGHT', 'COADD_NUMTILE']
 columns_4 = ['TARGETID', 'TSNR2_ELG', 'TSNR2_BGS', 'TSNR2_QSO', 'TSNR2_LRG']
-emline_columns = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
+columns_emline = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FLUX_IVAR', 'HALPHA_FLUX', 'HALPHA_FLUX_IVAR', 'HBETA_FLUX', 'HBETA_FLUX_IVAR', 'HGAMMA_FLUX', 'HGAMMA_FLUX_IVAR', 'HDELTA_FLUX', 'HDELTA_FLUX_IVAR']
 
 tileid_list = tiles['TILEID']
 
@@ -54,7 +54,7 @@ for tileid in tileid_list:
         tmp2 = Table(fitsio.read(fn, ext=2, columns=columns_2))
         tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
         emline_fn = fn.replace('redrock-', 'emline-')
-        tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(emline_columns)))
+        tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(columns_emline)))
 
         if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID'])):
             raise ValueError
@@ -97,12 +97,8 @@ cat = join(cat, lrg, keys='TARGETID')
 
 ############################ Add main LRG flag ############################
 
-main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
-
-lrg = []
-for field in ['north', 'south']:
-    lrg.append(Table(fitsio.read(os.path.join(main_dir, 'dr9_lrg_{}_1.0.0_basic.fits'.format(field)), columns=['TARGETID'])))
-lrg = vstack(lrg)
+main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
+lrg = Table(fitsio.read(os.path.join(main_dir, 'dr9_lrg_1.1.1_basic.fits'), columns=['TARGETID']))
 
 mask = np.in1d(cat['TARGETID'], lrg['TARGETID'])
 cat['main_lrg'] = False

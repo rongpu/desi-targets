@@ -87,12 +87,8 @@ cat = join(cat, lrg, keys='TARGETID')
 
 ############################ Add main LRG flag ############################
 
-main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.0.0/resolve'
-
-lrg = []
-for field in ['north', 'south']:
-    lrg.append(Table(fitsio.read(os.path.join(main_dir, 'dr9_lrg_{}_1.0.0_basic.fits'.format(field)), columns=['TARGETID'])))
-lrg = vstack(lrg)
+main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
+lrg = Table(fitsio.read(os.path.join(main_dir, 'dr9_lrg_1.1.1_basic.fits'), columns=['TARGETID']))
 
 mask = np.in1d(cat['TARGETID'], lrg['TARGETID'])
 cat['main_lrg'] = False

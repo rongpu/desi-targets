@@ -1,4 +1,4 @@
-# Create combined SV1 perexp LRG catalog
+# Create combined SV1 cumulative LRG catalog
 # The same script also works for 1x_depth, 4x_depth and low_speed coadds
 
 from __future__ import division, print_function
