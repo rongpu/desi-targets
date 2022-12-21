@@ -10,11 +10,13 @@ import fitsio
 
 ########################### Prepare data ###########################
 
-cat = Table(fitsio.read('/global/cfs/cdirs/cosmo/work/users/dstn/ODIN/xmm-N419/tractor-xmm-N419-hsc-forced.fits'))
+# cat = Table(fitsio.read('/global/cfs/cdirs/cosmo/work/users/dstn/ODIN/xmm-N419/tractor-xmm-N419-hsc-forced.fits'))
+cat = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/tractor-xmm-N419-hsc-forced.fits'))
 print(len(cat))
 
 # Stellar fiber flux estimates
-ffcat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/test/misc/tractor-xmm-N419-hsc-forced_stellar_fiber_flux.fits'))
+# ffcat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/test/misc/tractor-xmm-N419-hsc-forced_stellar_fiber_flux.fits'))
+ffcat = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/tractor-xmm-N419-hsc-forced_stellar_fiber_flux.fits'))
 cat['stellar_gmag'] = ffcat['stellar_gmag']
 
 # Extinction correction coefficients for the ODIN NB filters from Arjun's notebook
@@ -105,30 +107,19 @@ print(np.sum(lae_sel))
 lae_sel &= cat['n419']-cat['gmag']>-4  # This also removes g-band non-detections
 print(np.sum(lae_sel))
 
+lae_sel &= (cat['gmag']>18.5)
+print(np.sum(lae_sel))
+
 cat = cat[lae_sel]
 print('All targets', len(cat))
 
-lae_high_priority = (cat['gmag']>22.0)
-print(np.sum(lae_high_priority))
-
-lae_low_priority = (cat['gmag']>18.5) & (cat['gmag']<=22.0)
-print(np.sum(lae_low_priority))
 #########################################################
 
 # Estimate the target densities
-
 mask = cat['in_xmm'].copy()
-mask &= lae_high_priority
-print('High priority')
 print('Targets in DESI-XMM:', np.sum(mask))
 print('Target density: {:.2f}'.format(np.sum(mask)/xmm_area))
 
-mask = cat['in_xmm'].copy()
-mask &= lae_low_priority
-print('Low priority')
-print('Targets in DESI-XMM:', np.sum(mask))
-print('Target density: {:.2f}'.format(np.sum(mask)/xmm_area))
-
-cat[lae_high_priority].write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/odin_xmm_n419_lae_targets_high_priority_20221215.fits', overwrite=True)
-cat[lae_low_priority].write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/odin_xmm_n419_lae_targets_low_priority_20221215.fits', overwrite=True)
+# cat.write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/odin_xmm_n419_lae_targets.fits')
+cat.write('/Users/rongpu/Downloads/odin_wiro_data/odin_xmm_n419_lae_targets.fits')
 
