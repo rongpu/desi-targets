@@ -16,12 +16,12 @@ sys.path.append(os.path.expanduser('~/git/Python/user_modules/'))
 from match_coord import match_coord
 
 
-# odin = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/odin_xmm_n419_lae_targets.fits'))
-# wiroc = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/wiro_c_lae_targets.fits'))
-# wirod = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/wiro_d_lae_targets.fits'))
-odin = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/odin_xmm_n419_lae_targets.fits'))
-wiroc = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/wiro_c_lae_targets.fits'))
-wirod = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/wiro_d_lae_targets.fits'))
+odin = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/odin_xmm_n419_lae_targets.fits'))
+wiroc = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/wiro_c_lae_targets.fits'))
+wirod = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/wiro_d_lae_targets.fits'))
+# odin = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/odin_xmm_n419_lae_targets.fits'))
+# wiroc = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/wiro_c_lae_targets.fits'))
+# wirod = Table(fitsio.read('/Users/rongpu/Downloads/odin_wiro_data/wiro_d_lae_targets.fits'))
 
 odin['targetid'] = encode_targetid(odin['objid'], odin['brickid'], odin['release'])
 wiroc['targetid'] = encode_targetid(wiroc['objid'], wiroc['brickid'], wiroc['release'])
@@ -42,6 +42,8 @@ if len(wiro)!=len(np.unique(wiro['targetid'])):
     print(len(wiro), len(np.unique(wiro['targetid'])))
 
 odin['odin'] = True
+odin['odin_bright'] = odin['n419']<24.25
+odin['odin_faint'] = odin['n419']>=24.25
 print(len(odin), len(np.unique(odin['targetid'])))
 if len(odin)!=len(np.unique(odin['targetid'])):
     _, idx = np.unique(odin['targetid'], return_index=True)
@@ -58,14 +60,18 @@ wiro['fa_class'] = 'WIRO'
 wiro['odin'] = False
 idx1, idx2, d2d, d_ra, d_dec = match_coord(wiro['ra'], wiro['dec'], odin['ra'], odin['dec'], search_radius=1., plot_q=True)
 wiro['odin'][idx1] = True
+wiro['odin_bright'] = False
+wiro['odin_bright'][idx1] = odin['odin_bright'][idx2]
+wiro['odin_faint'] = False
+wiro['odin_faint'][idx1] = odin['odin_faint'][idx2]
 mask = np.in1d(np.arange(len(odin)), idx2)
 odin = odin[~mask]
 print(len(odin))
 
-wiro_columns = ['ra', 'dec', 'wiro_c', 'wiro_d', 'odin', 'fa_class']
-odin_columns = ['ra', 'dec', 'odin', 'fa_class']
+wiro_columns = ['ra', 'dec', 'wiro_c', 'wiro_d', 'odin', 'odin_bright', 'odin_faint', 'fa_class']
+odin_columns = ['ra', 'dec', 'odin', 'odin_bright', 'odin_faint', 'fa_class']
 cat = vstack([wiro[wiro_columns], odin[odin_columns]]).filled(False)
 
-# cat.write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/xmm_odin_wiro_merged_targets.fits', overwrite=True)
-cat.write('/Users/rongpu/Downloads/odin_wiro_data/xmm_odin_wiro_merged_targets.fits', overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/xmm_odin_wiro_merged_targets_1.fits', overwrite=True)
+# cat.write('/Users/rongpu/Downloads/odin_wiro_data/xmm_odin_wiro_merged_targets.fits', overwrite=True)
 

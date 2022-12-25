@@ -31,7 +31,7 @@ for fn in fns:
     tmp4 = Table(fitsio.read(fn, ext=4, columns=columns_4))
 
     emline_fn = fn.replace('redrock-', 'emline-')
-    tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=(emline_columns)))
+    tmp5 = Table(fitsio.read(emline_fn, ext=1, columns=emline_columns))
 
     if not (np.all(tmp1['TARGETID']==tmp2['TARGETID']) and np.all(tmp1['TARGETID']==tmp4['TARGETID']) and np.all(tmp1['TARGETID']==tmp5['TARGETID'])):
         raise ValueError
