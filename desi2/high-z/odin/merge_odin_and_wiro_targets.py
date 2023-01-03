@@ -72,6 +72,6 @@ wiro_columns = ['ra', 'dec', 'wiro_c', 'wiro_d', 'odin', 'odin_bright', 'odin_fa
 odin_columns = ['ra', 'dec', 'odin', 'odin_bright', 'odin_faint', 'fa_class']
 cat = vstack([wiro[wiro_columns], odin[odin_columns]]).filled(False)
 
-cat.write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/xmm_odin_wiro_merged_targets_1.fits', overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/xmm_lae/xmm_odin_wiro_merged_targets.fits', overwrite=True)
 # cat.write('/Users/rongpu/Downloads/odin_wiro_data/xmm_odin_wiro_merged_targets.fits', overwrite=True)
 
