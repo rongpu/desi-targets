@@ -9,19 +9,19 @@ from multiprocessing import Pool
 
 from desitarget.targets import encode_targetid
 
-n_processes = 64
+n_processes = 256
 
 field = str(sys.argv[1])
 print(field)
 
 sweep_dir = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
-pz_dir = '/global/cfs/cdirs/desi/users/rongpu/ls_dr9.0_desi_photoz/pz/'+field
+pz_dir = '/global/cfs/cdirs/desi/users/rongpu/data/ls_dr9.0_desi_photoz/pz/'+field
 
 sweep_columns = ['RELEASE', 'BRICKID', 'OBJID', 'TYPE', 'RA', 'DEC', 'DCHISQ', 'EBV',
 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_W1', 'FLUX_W2',
 'FLUX_IVAR_G', 'FLUX_IVAR_R', 'FLUX_IVAR_Z', 'FLUX_IVAR_W1', 'FLUX_IVAR_W2',
 'MW_TRANSMISSION_G', 'MW_TRANSMISSION_R', 'MW_TRANSMISSION_Z', 'MW_TRANSMISSION_W1', 'MW_TRANSMISSION_W2',
-'FIBERFLUX_Z', 'FIBERTOTFLUX_Z', 'GAIA_PHOT_G_MEAN_MAG',
+'FIBERFLUX_R', 'FIBERFLUX_Z', 'FIBERTOTFLUX_Z', 'GAIA_PHOT_G_MEAN_MAG',
 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS',
 'SHAPE_R', 'SHAPE_R_IVAR', 'SHAPE_E1', 'SHAPE_E2', 'SERSIC']
 

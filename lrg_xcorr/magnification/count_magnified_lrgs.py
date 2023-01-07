@@ -23,9 +23,10 @@ counts = dict()
 
 for field in ['north', 'south']:
 
-    cat = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), columns=columns))
-    cat1 = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_{}_fiberflux.fits'.format(field)))
-    cat = hstack([cat, cat1])
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}_fiberflux.fits'.format(field)))
+    cat2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}_pixel_nobs.fits'.format(field)))
+    cat = hstack([cat, cat1, cat2])
 
     if field=='north':
         mask_ns = (cat['DEC']>32.375)
@@ -44,10 +45,8 @@ for field in ['north', 'south']:
     # ADM remove stars with zfibertot < 17.5 that are missing from GAIA.
     mask_quality &= cat['FIBERTOTFLUX_Z'] < 10**(-0.4*(17.5-22.5))
 
-    # ADM observed in every band.
-    mask_quality &= (cat['NOBS_G'] > 0) & (cat['NOBS_R'] > 0) & (cat['NOBS_Z'] > 0)
-
-    mask_quality &= (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+    # mask_quality &= (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
+    mask_quality &= (cat['NGOOD_G']>=min_nobs) & (cat['NGOOD_R']>=min_nobs) & (cat['NGOOD_Z']>=min_nobs)
 
     # Apply masks
     mask_clean = np.ones(len(cat), dtype=bool)
@@ -69,9 +68,9 @@ for field in ['north', 'south']:
             zfibermag = 22.5 - 2.5 * np.log10((cat['FIBERFLUX_Z'] * (1 + (magnification-1) * 1               ) / cat['MW_TRANSMISSION_Z']).clip(1e-7))
 
         if pz_magnification:
-            pz = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)))
+            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)))
         else:
-            pz = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_pz_{}_1.fits'.format(field)))
+            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_pz_{}_1.fits'.format(field)))
         pz = pz[mask_ns]
 
         if len(pz)!=len(cat):
@@ -118,5 +117,5 @@ if not pz_magnification:
 if not ff_factor:
     fn += '_no_ff'
 
-with open('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/data/{}.txt'.format(fn), "w") as f:
+with open('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/counts/{}.txt'.format(fn), "w") as f:
     yaml.dump(counts, f)

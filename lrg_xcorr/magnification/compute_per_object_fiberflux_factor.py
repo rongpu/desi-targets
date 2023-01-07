@@ -8,11 +8,11 @@ from scipy.interpolate import interp1d
 from scipy.interpolate import griddata
 
 
-columns = ['MASKBITS', 'RA', 'DEC', 'TYPE', 'EBV', 'FLUX_Z', 'FIBERFLUX_Z', 'SHAPE_R', 'SHAPE_E1', 'SHAPE_E2', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'SERSIC']
+columns = ['MASKBITS', 'RA', 'DEC', 'TYPE', 'EBV', 'FLUX_Z', 'FIBERFLUX_Z', 'SHAPE_R', 'SHAPE_E1', 'SHAPE_E2', 'SERSIC']
 
 for field in ['north', 'south']:
 
-    cat = Table(fitsio.read('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), columns=columns))
 
     # axis ratio
     e = np.array(np.sqrt(cat['SHAPE_E1']**2+cat['SHAPE_E2']**2))
@@ -38,7 +38,7 @@ for field in ['north', 'south']:
     print('REX')
     print(np.sum(mask_rex), np.sum(mask_rex)/len(mask_rex))
 
-    data_rex = np.load('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/fiberflux_magnification/data/rex.npz')
+    data_rex = np.load('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/fiber_ratio/rex.npz')
     f_ratio_interp = interp1d(data_rex['shape_r'], data_rex['ratio'], bounds_error=False, fill_value='extrapolate', kind='quadratic')
     f_ratio = f_ratio_interp(cat['SHAPE_R'][mask_rex])
     f_ratio = np.clip(f_ratio, 0, 1)
@@ -55,7 +55,7 @@ for field in ['north', 'south']:
     print('EXP')
     print(np.sum(mask_exp), np.sum(mask_exp)/len(mask_exp))
 
-    data_exp_ratio = np.load('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/fiberflux_magnification/data/exp_fiber_ratio.npz')
+    data_exp_ratio = np.load('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/fiber_ratio/exp_fiber_ratio.npz')
     def f_ratio_interp_exp(r, q):
         q = np.clip(q, 1.2, 9.95)
         r = np.clip(r, 0., 5.99)
@@ -69,7 +69,7 @@ for field in ['north', 'south']:
     print(np.nanmedian(f_ratio))
     cat['ff_ratio'][mask_exp] = f_ratio
 
-    data_exp_factor = np.load('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/fiberflux_magnification/data/exp_fiber_factor.npz')
+    data_exp_factor = np.load('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/fiber_ratio/exp_fiber_factor.npz')
     def f_factor_interp_exp(r, q):
         q = np.clip(q, 1.2, 9.95)
         r = np.clip(r, 0., 5.99)
@@ -88,7 +88,7 @@ for field in ['north', 'south']:
     print('DEV')
     print(np.sum(mask_dev), np.sum(mask_dev)/len(mask_dev))
 
-    data_dev_ratio = np.load('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/fiberflux_magnification/data/dev_fiber_ratio.npz')
+    data_dev_ratio = np.load('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/fiber_ratio/dev_fiber_ratio.npz')
     def f_ratio_interp_dev(r, q):
         q = np.clip(q, 1.03, 9.98)
         r = np.clip(r, 0., 9.99)
@@ -102,7 +102,7 @@ for field in ['north', 'south']:
     print(np.nanmedian(f_ratio))
     cat['ff_ratio'][mask_dev] = f_ratio
 
-    data_dev_factor = np.load('/Users/rongpu/git/desi-targets/lrg_xcorr/magnification/fiberflux_magnification/data/dev_fiber_factor.npz')
+    data_dev_factor = np.load('/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/magnification/fiber_ratio/dev_fiber_factor.npz')
     def f_factor_interp_dev(r, q):
         q = np.clip(q, 1.03, 9.98)
         r = np.clip(r, 0., 9.99)
@@ -159,4 +159,4 @@ for field in ['north', 'south']:
         raise ValueError
 
     cat.remove_columns(columns)
-    cat.write('/Users/rongpu/Documents/Data/lrg_xcorr/magnification/lrg_magnification_{}_fiberflux.fits'.format(field), overwrite=True)
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}_fiberflux.fits'.format(field), overwrite=True)
