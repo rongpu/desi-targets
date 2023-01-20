@@ -38,6 +38,7 @@ for band in ['g', 'r', 'z']:
 
 def quicksim(truth, cat):
     '''
+    Get simulated fluxe measurements.
     truth columns: flux_grz, fiberflux_g, shape_r
     cat columns: psfsize_grz, psfdepth_grz, ebv
     '''
@@ -52,11 +53,13 @@ def quicksim(truth, cat):
         flux_err[band] = np.sqrt(nea[band]/pix_ivar)
 
     sim = Table()
+    fiberflux_bands = ['g']
     for band in ['g', 'r', 'z']:
-        sim['flux_'+band] = np.array(truth['flux_{}_ec'.format(band)] / 10**(0.4*ext_coeffs[band]*cat['ebv']) + np.random.randn(len(cat)) * flux_err[band], dtype='float32')
-    for band in ['g']:
-        fiberflux_ratio = truth['fiberflux_{}_ec'.format(band)] / truth['flux_{}_ec'.format(band)]
-        sim['fiberflux_'+band] = np.array(truth['fiberflux_{}_ec'.format(band)] / 10**(0.4*ext_coeffs[band]*cat['ebv']) + np.random.randn(len(cat)) * fiberflux_ratio*flux_err[band], dtype='float32')
+        noise = np.random.randn(len(cat))
+        sim['flux_'+band] = np.array(truth['flux_{}_ec'.format(band)] / 10**(0.4*ext_coeffs[band]*cat['ebv']) + noise * flux_err[band], dtype='float32')
+        if band in fiberflux_bands:
+            fiberflux_ratio = truth['fiberflux_{}_ec'.format(band)] / truth['flux_{}_ec'.format(band)]
+            sim['fiberflux_'+band] = np.array(truth['fiberflux_{}_ec'.format(band)] / 10**(0.4*ext_coeffs[band]*cat['ebv']) + noise * fiberflux_ratio*flux_err[band], dtype='float32')
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -71,6 +74,9 @@ def quicksim(truth, cat):
 
 
 def elgsim(foo):
+    '''
+    Run ELG selection on the simulated fluxes.
+    '''
 
     if len(cat)<=len(truth):
         replace = False
