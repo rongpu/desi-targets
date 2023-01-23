@@ -19,15 +19,15 @@ import yaml
 
 randoms_counts_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/counts'
 randoms_systematics_dir = '/global/cfs/cdirs/desi/users/rongpu/data/imaging_sys/randoms_stats/0.49.0/resolve/systematics'
-target_densities_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/main_lrg'
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg'
+target_densities_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/extended_lrg'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg'
 
 min_nobs = 2
 maskbits = []
 custom_mask_name = 'lrgmask_v1.1'
 min_pix_frac = 0.6  # minimum fraction of pixel area to be used
 nside = 256
-include_ebv = False
+include_ebv = True
 
 mask_str = ''.join([str(tmp) for tmp in maskbits])
 if custom_mask_name!='':
@@ -35,10 +35,10 @@ if custom_mask_name!='':
 
 if include_ebv:
     xnames_fit = ['EBV', 'psfdepth_w1mag_ebv', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
-    output_fn = 'main_lrg_linear_coeffs_pz.yaml'
+    output_fn = 'extended_lrg_linear_coeffs_pz.yaml'
 else:
     xnames_fit = ['psfdepth_w1mag_ebv', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
-    output_fn = 'main_lrg_linear_coeffs_pz_no_ebv.yaml'
+    output_fn = 'extended_lrg_linear_coeffs_pz_no_ebv.yaml'
 
 coeff_dict = {}
 
@@ -54,7 +54,7 @@ for field in ['north', 'south']:
         pix_area = hp.pixelfunc.nside2pixarea(nside, degrees=True)
         print('Healpix size = {:.5f} sq deg'.format(pix_area))
 
-        density = Table(fitsio.read(os.path.join(target_densities_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}.fits'.format(bin_index, field, nside, min_nobs))))
+        density = Table(fitsio.read(os.path.join(target_densities_dir, 'density_map_extended_lrg_pz_bin_{}_{}_nside_{}_minobs_{}.fits'.format(bin_index, field, nside, min_nobs))))
         maps = Table(fitsio.read(os.path.join(randoms_counts_dir, 'counts_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, mask_str))))
         maps = maps[maps['n_randoms']>0]
         maps1 = Table(fitsio.read(os.path.join(randoms_systematics_dir, 'systematics_{}_nside_{}_minobs_{}_maskbits_{}.fits'.format(field, nside, min_nobs, mask_str))))

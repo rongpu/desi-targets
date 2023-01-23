@@ -6,21 +6,20 @@ import fitsio
 
 import yaml
 
-
-include_ebv = False
+include_ebv = True
 
 if include_ebv:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg/main_lrg_linear_coeffs_pz.yaml'
-    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204-weights.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz.yaml'
+    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights.fits'
 else:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg/main_lrg_linear_coeffs_pz_no_ebv.yaml'
-    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204-weights_no_ebv.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz_no_ebv.yaml'
+    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights_no_ebv.fits'
 
 time_start = time.time()
 
 # Load LRG catalog
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'))
-sweep_2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_sweep_2.fits',
+cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_0.49.0_pzbins_20230120.fits'))
+sweep_2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_sweep_2.fits',
                 columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
 print(len(cat)==len(sweep_2))
 cat = hstack([cat, sweep_2], join_type='exact')

@@ -22,7 +22,7 @@ plt.rcParams.update(params)
 
 plt.rcParams['image.cmap'] = 'jet'
 
-weighted = False
+weighted = True
 
 min_nobs = 2
 maskbits = []
@@ -68,12 +68,12 @@ for bin_index in range(1, 5):
 
         plot_path = os.path.join(plot_dir, 'density_lrg_pz_bin_{}_{}.png'.format(bin_index, nside))
         if weighted:
-            plot_path = plot_path.replace('.png', '-lw.png')
+            plot_path = plot_path.replace('.png', '-lw_no_ebv.png')
         if os.path.isfile(plot_path):
             continue
 
         if weighted:
-            weighted_str = '-lw'
+            weighted_str = '-lw_no_ebv'
         else:
             weighted_str = ''
 

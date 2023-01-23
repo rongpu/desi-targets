@@ -1,4 +1,4 @@
-# srun -N 1 -C cpu -c 128 -t 04:00:00 -L cfs -q interactive python compute_density_variations-lrg_subsamples-weighted.py
+# srun -N 1 -C cpu -c 128 -t 04:00:00 -L cfs -q interactive python compute_density_variations-extended_subsamples-weighted.py
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -19,12 +19,12 @@ nsides = [64, 128, 256, 512]
 # nsides = [64]
 
 include_ebv = False
-output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/main_lrg/linear_weights'
+output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/extended_lrg/linear_weights'
 
 if include_ebv:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_1.1.1_pzbins_20221204-weights.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights.fits'
 else:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_1.1.1_pzbins_20221204-weights_no_ebv.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights_no_ebv.fits'
 
 
 def get_weighted_counts(pix_idx):
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # Load LRG catalog
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_0.49.0_pzbins_20230120.fits'))
     cat_weights = Table(fitsio.read(weights_path))
     cat = hstack([cat, cat_weights], join_type='exact')
 
@@ -76,9 +76,9 @@ if __name__ == '__main__':
 
             for nside in nsides:
                 if include_ebv:
-                    output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}-lw.fits'.format(bin_index, field, nside, min_nobs))
+                    output_path = os.path.join(output_dir, 'density_map_extended_lrg_pz_bin_{}_{}_nside_{}_minobs_{}-lw.fits'.format(bin_index, field, nside, min_nobs))
                 else:
-                    output_path = os.path.join(output_dir, 'density_map_lrg_pz_bin_{}_{}_nside_{}_minobs_{}-lw_no_ebv.fits'.format(bin_index, field, nside, min_nobs))
+                    output_path = os.path.join(output_dir, 'density_map_extended_lrg_pz_bin_{}_{}_nside_{}_minobs_{}-lw_no_ebv.fits'.format(bin_index, field, nside, min_nobs))
                 if os.path.isfile(output_path):
                     continue
                 npix = hp.nside2npix(nside)

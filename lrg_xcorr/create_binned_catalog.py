@@ -18,17 +18,17 @@ cat['pz_bin'] = np.int16(-1)
 
 # South
 mask0 = cat['PHOTSYS']=='S'
-pz_cuts = [0.400, 0.540, 0.713, 0.860, 1.020]
-for bin_index in range(len(pz_cuts)-1):
-    pz_min, pz_max = pz_cuts[bin_index], pz_cuts[bin_index+1]
+pz_cuts_south = [0.400, 0.540, 0.713, 0.860, 1.020]
+for bin_index in range(len(pz_cuts_south)-1):
+    pz_min, pz_max = pz_cuts_south[bin_index], pz_cuts_south[bin_index+1]
     mask = mask0 & (cat['Z_PHOT_MEDIAN']>=pz_min) & (cat['Z_PHOT_MEDIAN']<pz_max)
     cat['pz_bin'][mask] = bin_index+1
 
 # North
 mask0 = cat['PHOTSYS']=='N'
-pz_cuts = [0.400, 0.545, 0.719, 0.851, 1.024]
-for bin_index in range(len(pz_cuts)-1):
-    pz_min, pz_max = pz_cuts[bin_index], pz_cuts[bin_index+1]
+pz_cuts_north = [0.400, 0.545, 0.719, 0.851, 1.024]
+for bin_index in range(len(pz_cuts_north)-1):
+    pz_min, pz_max = pz_cuts_north[bin_index], pz_cuts_north[bin_index+1]
     mask = mask0 & (cat['Z_PHOT_MEDIAN']>=pz_min) & (cat['Z_PHOT_MEDIAN']<pz_max)
     cat['pz_bin'][mask] = bin_index+1
 
