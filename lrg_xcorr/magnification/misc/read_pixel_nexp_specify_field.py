@@ -1,5 +1,5 @@
-# srun -N 1 -C cpu -t 04:00:00 -q interactive python read_pixel_nexp_specify_field.py --input /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_north.fits --output /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_north_pixel_nobs.fits --field north
-# srun -N 1 -C cpu -t 04:00:00 -q interactive python read_pixel_nexp_specify_field.py --input /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_south.fits --output /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_south_pixel_nobs.fits --field south
+# srun -N 1 -C cpu -t 04:00:00 -q interactive python read_pixel_nexp_specify_field.py --input /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_north.fits --output /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_north_pixel_nobs.fits --field north
+# srun -N 1 -C cpu -t 04:00:00 -q interactive python read_pixel_nexp_specify_field.py --input /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_south.fits --output /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_south_pixel_nobs.fits --field south
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc

@@ -12,7 +12,7 @@ columns = ['MASKBITS', 'RA', 'DEC', 'TYPE', 'EBV', 'FLUX_Z', 'FIBERFLUX_Z', 'SHA
 
 for field in ['north', 'south']:
 
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}.fits'.format(field), columns=columns))
 
     tmp = Table()
     tmp['type'], tmp['count'] = np.unique(cat['TYPE'], return_counts=True)
@@ -165,4 +165,4 @@ for field in ['north', 'south']:
         raise ValueError
 
     cat.remove_columns(columns)
-    cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}_fiberflux.fits'.format(field), overwrite=True)
+    cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_fiberflux.fits'.format(field), overwrite=True)

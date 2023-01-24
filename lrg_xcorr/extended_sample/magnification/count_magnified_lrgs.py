@@ -12,6 +12,9 @@ ff_factor = True  # Include for the fiberflux factor
 min_nobs = 2
 # maskbits = [1, 8, 9, 11, 12, 13]
 
+pz_cuts_south = [0.400, 0.540, 0.713, 0.860, 1.00]
+pz_cuts_north = [0.400, 0.545, 0.719, 0.854, 1.01]
+
 columns = ['TARGETID', 'TYPE', 'RA', 'DEC', 'EBV',
 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_W1', 'FIBERFLUX_Z',
 'FLUX_IVAR_G', 'FLUX_IVAR_R', 'FLUX_IVAR_Z', 'FLUX_IVAR_W1',
@@ -23,11 +26,24 @@ counts = dict()
 
 for field in ['north', 'south']:
 
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}.fits'.format(field), columns=columns))
-    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}_fiberflux.fits'.format(field)))
-    cat2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}_pixel_nobs.fits'.format(field)))
-    cat3 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}_lrgmask_v1.1.fits.gz'.format(field)))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_fiberflux.fits'.format(field)))
+    cat2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_pixel.fits'.format(field)))
+    cat3 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_lrgmask_v1.1.fits.gz'.format(field)))
     cat = hstack([cat, cat1, cat2, cat3])
+
+    if field=='north':
+        cat['PHOTSYS'] = 'N'
+    else:
+        cat['PHOTSYS'] = 'S'
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        cat['gmag'] = 22.5 - 2.5*np.log10(cat['FLUX_G']) - 3.214 * cat['EBV']
+        cat['rmag'] = 22.5 - 2.5*np.log10(cat['FLUX_R']) - 2.165 * cat['EBV']
+        cat['zmag'] = 22.5 - 2.5*np.log10(cat['FLUX_Z']) - 1.211 * cat['EBV']
+        cat['w1mag'] = 22.5 - 2.5*np.log10(cat['FLUX_W1']) - 0.184 * cat['EBV']
+        cat['zfibermag'] = 22.5 - 2.5*np.log10(cat['FIBERFLUX_Z']) - 1.211 * cat['EBV']
 
     if field=='north':
         mask_ns = (cat['DEC']>32.375)
@@ -47,7 +63,7 @@ for field in ['north', 'south']:
     mask_quality &= cat['FIBERTOTFLUX_Z'] < 10**(-0.4*(17.5-22.5))
 
     # mask_quality &= (cat['NOBS_G']>=min_nobs) & (cat['NOBS_R']>=min_nobs) & (cat['NOBS_Z']>=min_nobs)
-    mask_quality &= (cat['NGOOD_G']>=min_nobs) & (cat['NGOOD_R']>=min_nobs) & (cat['NGOOD_Z']>=min_nobs)
+    mask_quality &= (cat['PIXEL_NOBS_G']>=min_nobs) & (cat['PIXEL_NOBS_R']>=min_nobs) & (cat['PIXEL_NOBS_Z']>=min_nobs)
 
     # Apply masks
     # mask_clean = np.ones(len(cat), dtype=bool)
@@ -71,9 +87,9 @@ for field in ['north', 'south']:
             zfibermag = 22.5 - 2.5 * np.log10((cat['FIBERFLUX_Z'] * (1 + (magnification-1) * 1               ) / cat['MW_TRANSMISSION_Z']).clip(1e-7))
 
         if pz_magnification:
-            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)))
+            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)))
         else:
-            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_pz_{}_1.fits'.format(field)))
+            pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_pz_{}_1.fits'.format(field)))
         pz = pz[mask_ns]
 
         if len(pz)!=len(cat):
@@ -82,30 +98,26 @@ for field in ['north', 'south']:
         mask_lrg = np.full(len(cat), True)
 
         if field=='south':
-            mask_lrg &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
-            mask_lrg &= zfibermag < 21.6                   # faint limit
-            mask_lrg &= (gmag - w1mag > 2.9) | (rmag - w1mag > 1.8)  # low-z cuts
-            mask_lrg &= (
-                ((rmag - w1mag > (w1mag - 17.14) * 1.8)
-                 & (rmag - w1mag > (w1mag - 16.33) * 1.))
-                | (rmag - w1mag > 3.3)
-            )  # double sliding cuts and high-z extension
+            mask_lrg &= zmag - w1mag > 0.8 * (rmag-zmag) - 0.6    # non-stellar cut
+            mask_lrg &= zfibermag < 21.96                        # faint limit
+            mask_lrg &= (rmag - w1mag > 1.0)                      # low-z cut
+            lrg_mask_slide = rmag - w1mag > (w1mag - 17.48) * 1.8  # sliding IR cut
+            lrg_mask_slide |= (rmag - w1mag > 3.1)                 # add high-z objects
+            mask_lrg &= lrg_mask_slide
         else:
-            mask_lrg &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
-            mask_lrg &= zfibermag < 21.61                   # faint limit
-            mask_lrg &= (gmag - w1mag > 2.97) | (rmag - w1mag > 1.8)  # low-z cuts
-            mask_lrg &= (
-                ((rmag - w1mag > (w1mag - 17.13) * 1.83)
-                 & (rmag - w1mag > (w1mag - 16.31) * 1.))
-                | (rmag - w1mag > 3.4)
-            )  # double sliding cuts and high-z extension
+            mask_lrg &= zmag - w1mag > 0.8 * (rmag-zmag) - 0.6      # non-stellar cut
+            mask_lrg &= zfibermag<22.0                              # faint limit
+            mask_lrg &= (rmag - w1mag > 1.03)                       # low-z cut
+            lrg_mask_slide = rmag - w1mag > (w1mag - 17.44) * 1.8    # sliding IR cut
+            lrg_mask_slide |= (rmag - w1mag > 3.2)                   # add high-z objects
+            mask_lrg &= lrg_mask_slide
 
         counts['{}_all_{:.3f}'.format(field, magnification)] = int(np.sum(mask_quality & mask_lrg))
 
         if field=='south':
-            pz_cuts = [0.400, 0.540, 0.713, 0.860, 1.020]
+            pz_cuts = pz_cuts_south
         else:
-            pz_cuts = [0.400, 0.545, 0.719, 0.851, 1.024]
+            pz_cuts = pz_cuts_north
 
         for bin_index in range(len(pz_cuts)-1):
 
@@ -114,7 +126,7 @@ for field in ['north', 'south']:
 
             counts['{}_bin_{}_{:.3f}'.format(field, bin_index+1, magnification)] = int(np.sum(mask_quality & mask_lrg & mask_pz))
 
-fn = 'main_lrg_counts'
+fn = 'extended_lrg_counts'
 if not pz_magnification:
     fn += '_no_pz_mag'
 if not ff_factor:

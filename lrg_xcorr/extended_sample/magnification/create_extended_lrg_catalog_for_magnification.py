@@ -1,4 +1,4 @@
-# srun -N 1 -C haswell -c 64 -t 04:00:00 -q interactive python create_lrg_catalog_for_magnification.py north
+# srun -N 1 -C cpu -c 128 -t 04:00:00 -q interactive python create_extended_lrg_catalog_for_magnification.py north
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -9,7 +9,7 @@ from multiprocessing import Pool
 
 from desitarget.targets import encode_targetid
 
-n_processes = 256
+n_processes = 128
 
 field = str(sys.argv[1])
 print(field)
@@ -73,23 +73,22 @@ def get_lrgs(sweep_fn):
         mask_lrg = np.full(len(cat), True)
 
         if field=='south':
-            mask_lrg &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
-            mask_lrg &= zfibermag < 21.6                   # faint limit
-            mask_lrg &= (gmag - w1mag > 2.9) | (rmag - w1mag > 1.8)  # low-z cuts
-            mask_lrg &= (
-                ((rmag - w1mag > (w1mag - 17.14) * 1.8)
-                 & (rmag - w1mag > (w1mag - 16.33) * 1.))
-                | (rmag - w1mag > 3.3)
-            )  # double sliding cuts and high-z extension
+            mask_lrg &= zmag - w1mag > 0.8 * (rmag-zmag) - 0.8    # non-stellar cut
+            mask_lrg &= ((zmag < 21.0) | (zfibermag < 22.0))      # faint limit
+            mask_lrg &= (rmag - w1mag > 1.0)                      # low-z cut
+            lrg_mask_slide = rmag - w1mag > (w1mag - 17.48) * 1.8  # sliding IR cut
+            lrg_mask_slide |= (rmag - w1mag > 3.1)                 # add high-z objects
+            mask_lrg &= lrg_mask_slide
         else:
-            mask_lrg &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
-            mask_lrg &= zfibermag < 21.61                   # faint limit
-            mask_lrg &= (gmag - w1mag > 2.97) | (rmag - w1mag > 1.8)  # low-z cuts
-            mask_lrg &= (
-                ((rmag - w1mag > (w1mag - 17.13) * 1.83)
-                 & (rmag - w1mag > (w1mag - 16.31) * 1.))
-                | (rmag - w1mag > 3.4)
-            )  # double sliding cuts and high-z extension
+            mask_lrg &= zmag - w1mag > 0.8 * (rmag-zmag) - 0.8      # non-stellar cut
+            mask_lrg &= ((zmag < 21.0) | (zfibermag < 22.0))        # faint limit
+            mask_lrg &= (rmag - w1mag > 1.03)                       # low-z cut
+            lrg_mask_slide = rmag - w1mag > (w1mag - 17.44) * 1.8    # sliding IR cut
+            lrg_mask_slide |= (rmag - w1mag > 3.1)                   # add high-z objects
+            mask_lrg &= lrg_mask_slide
+
+        if magnification==1:
+            mask_no_magnification = mask_lrg.copy()
 
         mask_lrg_all |= mask_lrg
         print('magnification = {}; '.format(magnification), np.sum(mask_lrg_all))
@@ -97,6 +96,8 @@ def get_lrgs(sweep_fn):
     mask_lrg_all &= mask_quality
     if np.sum(mask_lrg_all)==0:
         return None
+
+    cat['no_magnification'] = mask_no_magnification.copy()
 
     cat = cat[mask_lrg_all]
 
@@ -134,7 +135,7 @@ cat = vstack(res)
 
 cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
 
-cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/lrg_magnification_{}.fits'.format(field), overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}.fits'.format(field), overwrite=True)
 
 print('All done!', time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start)))
 

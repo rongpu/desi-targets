@@ -9,7 +9,7 @@ columns_to_keep = ['TARGETID', 'RA', 'DEC', 'EBV', 'PIXEL_NOBS_G', 'PIXEL_NOBS_R
 cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_basic.fits'))
 pz = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pz_new.fits', columns=['Z_PHOT_MEDIAN']))
 lrgmask = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_lrgmask_v1.1.fits.gz'))
-photom = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_photom.fits', columns=['FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_Z', 'EBV']))
+photom = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_photom.fits', columns=['FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_W1', 'FLUX_W2', 'FIBERFLUX_Z', 'EBV', 'FIBERTOTFLUX_Z', 'GAIA_PHOT_G_MEAN_MAG']))
 pixel = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pixel.fits'))
 cat = hstack([cat, pz, lrgmask, photom, pixel], join_type='exact')
 print(len(cat))
@@ -30,6 +30,9 @@ north_sliding_cut = (cat['rmag'] - cat['w1mag'] > (cat['w1mag'] - 17.44) * 1.8)
 north_sliding_cut |= ((cat['rmag']-cat['w1mag'])>3.2)
 mask_valid = mask_north & north_sliding_cut
 mask_valid |= mask_south & (cat['zfibermag']<21.96)
+mask_valid &= cat['zmag'] - cat['w1mag'] > 0.8 * (cat['rmag']-cat['zmag']) - 0.6
+mask_valid &= (cat['GAIA_PHOT_G_MEAN_MAG'] == 0) | (cat['GAIA_PHOT_G_MEAN_MAG'] > 18)  # remove bright GAIA sources
+mask_valid &= cat['FIBERTOTFLUX_Z'] < 10**(-0.4*(17.5-22.5))  # ADM remove stars with zfibertot < 17.5 that are missing from GAIA.
 print(np.sum(mask_valid)/len(mask_valid))
 print(np.sum(mask_valid & mask_north)/np.sum(mask_north))
 print(np.sum(mask_valid & mask_south)/np.sum(mask_south))

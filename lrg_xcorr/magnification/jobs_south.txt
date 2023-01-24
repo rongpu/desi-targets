@@ -1,3 +1,0 @@
-srun -N 1 python rf_photoz_with_magnification.py south 0.99 &> /global/u2/r/rongpu/temp/tmp/south_0.99.log
-srun -N 1 python rf_photoz_with_magnification.py south 1. &> /global/u2/r/rongpu/temp/tmp/south_1.log
-srun -N 1 python rf_photoz_with_magnification.py south 1.01 &> /global/u2/r/rongpu/temp/tmp/south_1.01.log
