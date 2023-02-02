@@ -50,6 +50,8 @@ from desiutil import brick
 tmp = brick.Bricks(bricksize=0.25)
 cat['brickid'] = tmp.brickid(cat['ra'], cat['dec'])
 
+cat.write('/global/cfs/cdirs/desi/users/rongpu/imaging_mc/truth/cosmos_truth_clean.fits', overwrite=True)
+
 subs = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/deep_field_subsets/catalogs/cosmos_subsets_rongpu_dr10.fits'))
 brickid_list = np.unique(subs['brickid'])
 

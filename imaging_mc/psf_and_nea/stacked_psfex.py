@@ -1,3 +1,5 @@
+# Create stacked PSFEx models as a function of PSF_FWHM
+
 import sys, os, glob, time, warnings, gc
 import numpy as np
 import matplotlib.pyplot as plt
