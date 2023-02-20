@@ -1,7 +1,7 @@
 # Use zcatalog instead of the LSS catalog
 # Make 2-D density plots of redshift vs fiber
 # Example:
-# python plot_redshift_vs_fiber-zcatalog.py --tracer LRG --plot_dir /global/cfs/cdirs/desi/users/rongpu/redshift_qa/z_vs_fiber/Y1_himalayas/zcatalog
+# python plot_redshift_vs_fiber-zcatalog.py --tracer LRG --plot_dir /global/cfs/cdirs/desi/users/rongpu/redshift_qa/z_vs_fiber/Y1_iron/zcatalog
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc, argparse
@@ -32,7 +32,7 @@ target_bit = target_bits[tracer]
 
 if fn is None:
     fn_dict = {'BGS_ANY': 'ztile-main-bright-cumulative.fits', 'LRG': 'ztile-main-dark-cumulative.fits', 'ELG': 'ztile-main-dark-cumulative.fits', 'QSO': 'ztile-main-dark-cumulative.fits'}
-    fn = os.path.join('/global/cfs/cdirs/desi/spectro/redux/himalayas/zcatalog', fn_dict[tracer])
+    fn = os.path.join('/global/cfs/cdirs/desi/spectro/redux/iron/zcatalog', fn_dict[tracer])
 
 min_nobs = 100
 

@@ -1,0 +1,91 @@
+from __future__ import division, print_function
+import sys, os, glob, time, warnings, gc
+import numpy as np
+import matplotlib.pyplot as plt
+from astropy.table import Table, vstack, hstack, join
+import fitsio
+# from astropy.io import fits
+
+import healpy as hp
+from multiprocessing import Pool
+
+from desitarget.targets import decode_targetid, encode_targetid
+
+sys.path.append(os.path.expanduser('~/git/desi-targets/dr9/create_target_catalogs/main/'))
+from select_desi_targets import select_elg
+
+
+field = 'south'
+
+sweep_dir = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
+
+sweep_all_path = sorted(glob.glob(os.path.join(sweep_dir, '*.fits')))
+sweep_fn_list = [os.path.basename(sweep_all_path[ii]) for ii in range(len(sweep_all_path))]
+
+
+fn_hi = '/global/cfs/cdirs/desi/users/rongpu/useful/lenz_hi/ebv_lhd.hpx.fits'
+ebv = Table(fitsio.read(fn_hi))
+nside = 1024
+ebv['pix'] = np.arange(hp.nside2npix(nside))
+ebv.rename_column('EBV', 'EBV_HI')
+
+mask = np.isfinite(ebv['EBV_HI'])
+ebv = ebv[mask]
+
+columns = ['OBJID', 'BRICKID', 'RELEASE', 'RA', 'DEC', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FIBERFLUX_G', 'FLUX_IVAR_G', 'FLUX_IVAR_R', 'FLUX_IVAR_Z', 'EBV', 'MASKBITS', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
+
+
+def get_elgs(sweep_fn):
+
+    sweep_path = os.path.join(sweep_dir, sweep_fn)
+
+    # cat = Table(fitsio.read(sweep_path, columns=['RA', 'DEC']))
+    # hp_pix = hp.ang2pix(nside, cat['RA'], cat['DEC'], nest=False, lonlat=True)
+    # idx = np.where(np.in1d(hp_pix, ebv['pix']))[0]
+    # if len(idx)==0:
+    #     return None
+    # cat = Table(fitsio.read(sweep_path, columns=columns, rows=idx))
+
+    cat = Table(fitsio.read(sweep_path, columns=columns))
+    cat['pix'] = hp.ang2pix(nside, cat['RA'], cat['DEC'], nest=False, lonlat=True)
+    mask = np.in1d(cat['pix'], ebv['pix'])
+    print(np.sum(mask)/len(mask))
+    if np.sum(mask)==0:
+        return None
+    cat = cat[mask]
+    cat = join(cat, ebv, keys='pix')
+    cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
+
+    cat1 = cat.copy()
+    cat1['EBV'] = cat['EBV_HI']
+    cat['elglop'], cat['elgvlo'] = select_elg(cat1)
+    mask = cat['elglop'] | cat['elgvlo']
+    print(np.sum(mask)/len(mask))
+    if np.sum(mask)==0:
+        return None
+    cat = cat[mask]
+    cat = cat[['TARGETID', 'RA', 'DEC', 'elglop', 'elgvlo']]
+
+    return cat
+
+
+print('Start!')
+
+time_start = time.time()
+
+# start multiple worker processes
+n_processess = 128
+with Pool(processes=n_processess) as pool:
+    res = pool.map(get_elgs, sweep_fn_list)
+
+# Remove None elements from the list
+for index in range(len(res)-1, -1, -1):
+    if res[index] is None:
+        res.pop(index)
+
+cat_stack = vstack(res)
+
+print('Final combined catalog:', len(cat_stack))
+
+cat_stack.write('/pscratch/sd/r/rongpu/ebv/elg_targets_hi_ebv.fits')
+

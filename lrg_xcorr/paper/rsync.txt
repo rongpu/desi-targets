@@ -1,0 +1,1 @@
+rsync saul:notebooks/lrg_xcorr/paper/figures /Users/rongpu/git/desi-targets/lrg_xcorr/paper/

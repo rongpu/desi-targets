@@ -62,7 +62,7 @@ def get_sweep_columns(sweep_fn, field):
     sweep_extra_fn = sweep_fn.replace('/sweep/9.0/', '/sweep/9.0-extra/').replace('.fits', '-ex.fits')
     cat_extra = Table(fitsio.read(sweep_extra_fn, rows=idx, columns=sweep_extra_columns))
 
-    pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz.fits')
+    pz_fn = sweep_fn.replace('sweep/9.0/', 'sweep/9.0-photo-z/').replace('.fits', '-pz_dr9.fits')
     pz = Table(fitsio.read(pz_fn, rows=idx))
     pz.remove_columns(['OBJID', 'BRICKID', 'RELEASE'])
 
@@ -104,7 +104,7 @@ cat_basic_path = os.path.join(output_dir, 'dr9_{}_1.1.1_basic.fits'.format(targe
 cat_sweep_1_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_1.fits'.format(target_class.lower()))
 cat_sweep_2_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_2.fits'.format(target_class.lower()))
 cat_sweep_extra_path = os.path.join(output_dir, 'dr9_{}_1.1.1_sweep_extra_1.fits'.format(target_class.lower()))
-cat_pz_path = os.path.join(output_dir, 'dr9_{}_1.1.1_pz.fits'.format(target_class.lower()))
+cat_pz_path = os.path.join(output_dir, 'dr9_{}_1.1.1_pz_dr9.fits'.format(target_class.lower()))
 
 if os.path.isfile(cat_sweep_1_path):
     sys.exit('File already exist: '+cat_sweep_1_path)
