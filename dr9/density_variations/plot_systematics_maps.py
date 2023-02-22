@@ -135,6 +135,6 @@ for nside in [64, 128, 256]:
         if os.path.isfile(plot_path):
             continue
 
-        plot_map(nside, maps['HPXPIXEL'], maps[xname],
+        plot_map(nside, maps[xname], pix=maps['HPXPIXEL'],
                  vmin=bin_params[xname][0], vmax=bin_params[xname][1],
                  title='{} NSIDE={}'.format(xlabels[index], nside), save_path=plot_path, show=False)

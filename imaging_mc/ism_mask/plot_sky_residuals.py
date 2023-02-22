@@ -41,12 +41,12 @@ for nside in [256, 512]:
 
         plot_path = os.path.join(plot_dir, 'dr9_sky_median_{}_{}.png'.format(band, nside))
         if not os.path.isfile(plot_path):
-            plot_map(nside, sky['HPXPIXEL'], sky['sky_median_'+band],
+            plot_map(nside, sky['sky_median_'+band], pix=sky['HPXPIXEL'],
                      vmin=-median_ranges[band], vmax=median_ranges[band], cmap='seismic', nest=False,
                      title='sky_median_{} NSIDE={}'.format(band, nside), save_path=plot_path)
 
         plot_path = os.path.join(plot_dir, 'dr9_sky_nmad_{}_{}.png'.format(band, nside))
         if not os.path.isfile(plot_path):
-            plot_map(nside, sky['HPXPIXEL'], sky['sky_nmad_'+band],
+            plot_map(nside, sky['sky_nmad_'+band], pix=sky['HPXPIXEL'],
                      vmin=nmad_ranges[band][0], vmax=nmad_ranges[band][1], cmap='viridis', nest=False,
                      title='sky_nmad_{} NSIDE={}'.format(band, nside), save_path=plot_path)

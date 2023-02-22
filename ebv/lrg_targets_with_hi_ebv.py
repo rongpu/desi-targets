@@ -12,10 +12,10 @@ from multiprocessing import Pool
 from desitarget.targets import decode_targetid, encode_targetid
 
 sys.path.append(os.path.expanduser('~/git/desi-targets/dr9/create_target_catalogs/main/'))
-from select_desi_targets import select_elg
+from select_desi_targets import select_lrg
 
 
-def get_elgs(sweep_fn):
+def get_lrgs(sweep_fn):
 
     sweep_path = os.path.join(sweep_dir, sweep_fn)
 
@@ -34,13 +34,12 @@ def get_elgs(sweep_fn):
 
     cat1 = cat.copy()
     cat1['EBV'] = cat['EBV_HI']
-    cat['elglop'], cat['elgvlo'] = select_elg(cat1)
-    mask = cat['elglop'] | cat['elgvlo']
+    mask = select_lrg(cat1, field=field)
     print(np.sum(mask)/len(mask))
     if np.sum(mask)==0:
         return None
     cat = cat[mask]
-    cat = cat[['TARGETID', 'RA', 'DEC', 'EBV', 'EBV_HI', 'elglop', 'elgvlo']]
+    cat = cat[['TARGETID', 'RA', 'DEC', 'EBV', 'EBV_HI']]
 
     return cat
 
@@ -54,7 +53,7 @@ for field in ['south', 'north']:
     sweep_all_path = sorted(glob.glob(os.path.join(sweep_dir, '*.fits')))
     sweep_fn_list = [os.path.basename(sweep_all_path[ii]) for ii in range(len(sweep_all_path))]
 
-    # fn_hi = '/global/cfs/cdirs/desi/users/rongpu/useful/lenz_hi/ebv_lhd_equatorial.hpx.fits'
+    # fn_hi = '/global/cfs/cdirs/desi/users/rongpu/useful/lenz_hi/ebv_lhd.hpx.fits'
     fn_hi = '/global/cfs/cdirs/desi/users/rongpu/useful/lenz_hi/ebv_lhd_equatorial.hpx.fits'
     ebv = Table(fitsio.read(fn_hi))
     nside = 1024
@@ -66,7 +65,7 @@ for field in ['south', 'north']:
 
     ebv['EBV_HI'] = ebv['EBV_HI'] / 0.884  # rescale to match the original SFD EBV
 
-    columns = ['OBJID', 'BRICKID', 'RELEASE', 'RA', 'DEC', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FIBERFLUX_G', 'FLUX_IVAR_G', 'FLUX_IVAR_R', 'FLUX_IVAR_Z', 'EBV', 'MASKBITS', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
+    columns = ['OBJID', 'BRICKID', 'RELEASE', 'RA', 'DEC', 'FLUX_G', 'FLUX_R', 'FLUX_Z', 'FLUX_W1', 'FLUX_IVAR_R', 'FLUX_IVAR_Z', 'FLUX_IVAR_W1', 'FIBERFLUX_Z', 'FIBERTOTFLUX_Z', 'GAIA_PHOT_G_MEAN_MAG', 'EBV', 'MASKBITS', 'NOBS_G', 'NOBS_R', 'NOBS_Z']
 
     print('Start!')
 
@@ -75,7 +74,7 @@ for field in ['south', 'north']:
     # start multiple worker processes
     n_processess = 128
     with Pool(processes=n_processess) as pool:
-        res = pool.map(get_elgs, sweep_fn_list)
+        res = pool.map(get_lrgs, sweep_fn_list)
 
     # Remove None elements from the list
     for index in range(len(res)-1, -1, -1):
@@ -95,5 +94,5 @@ for field in ['south', 'north']:
     cat_stack.append(cat)
 
 cat_stack = vstack(cat_stack)
-cat_stack.write('/pscratch/sd/r/rongpu/ebv/elg_targets_hi_ebv.fits')
+cat_stack.write('/pscratch/sd/r/rongpu/ebv/lrg_targets_hi_ebv.fits')
 

@@ -131,7 +131,7 @@ for target_class in ['BGS_ANY', 'BGS_BRIGHT', 'LRG', 'ELG', 'ELG_LOP', 'QSO']:
 
         maps['density'] = maps['n_targets'] / (pix_area * maps['FRACAREA'])
 
-        plot_map(nside, maps['HPXPIXEL'], maps['density'],
+        plot_map(nside, maps['density'], pix=maps['HPXPIXEL'],
                  vmin=vrange_dict[target_class.upper()][nside][0], vmax=vrange_dict[target_class.upper()][nside][1],
                  title='{} NSIDE={}'.format(target_class.upper(), nside), save_path=plot_path, show=False)
 

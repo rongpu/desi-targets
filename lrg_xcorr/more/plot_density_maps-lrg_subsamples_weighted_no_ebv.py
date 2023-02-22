@@ -127,6 +127,6 @@ for bin_index in range(1, 5):
         if weighted:
             vmin, vmax = vmin/vcenter, vmax/vcenter
 
-        plot_map(nside, maps['HPXPIXEL'], maps['density'],
+        plot_map(nside, maps['density'], pix=maps['HPXPIXEL'],
                  vmin=vmin, vmax=vmax, xsize=xsize_dict[nside], dpi=dpi_dict[nside],
                  title='LRG photo-z bin {} NSIDE={}'.format(bin_index, nside), save_path=plot_path, show=False)
