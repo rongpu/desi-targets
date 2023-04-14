@@ -189,11 +189,11 @@ if __name__ == '__main__':
     if (field!='south') and (field!='north'):
         raise ValueError('field must be either \"north\" or \"south\"')
 
-    output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)
+    output_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_pz_{}_{:g}.fits'.format(field, magnification)
     chunks_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/tmp/kf_chunks/'+field
 
-    cat_all = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}.fits'.format(field), columns=columns))
-    cat_all1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/main_lrg_magnification_{}_fiberflux.fits'.format(field), columns=['ff_factor']))
+    cat_all = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat_all1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_fiberflux.fits'.format(field), columns=['ff_factor']))
     cat_all = hstack([cat_all, cat_all1])
     cat_size = len(cat_all)
 
@@ -218,7 +218,7 @@ if __name__ == '__main__':
 
     for kf_index in range(n_folds):
 
-        chunk_output_path = os.path.join(chunks_dir, 'lrg_magnification_pz_{}_{:g}.fits'.format(kf_index+1, magnification))
+        chunk_output_path = os.path.join(chunks_dir, 'extended_lrg_magnification_pz_{}_{:g}.fits'.format(kf_index+1, magnification))
         if os.path.isfile(chunk_output_path):
             continue
         Path(chunk_output_path).touch(exist_ok=False)
@@ -233,9 +233,11 @@ if __name__ == '__main__':
         cat_idx = np.where(mask_kf | mask_train)[0]
 
         # split among the processes
-        chunk_size = float(5e4)
+        chunk_size = float(2e4)
         n_split = int(np.ceil(len(cat_idx)/chunk_size))
         split_idx_list = np.array_split(cat_idx, n_split)
+        if n_folds==0:
+            print('n_split', n_split)
 
         tree_dir = '/global/cfs/cdirs/desi/users/rongpu/data/ls_dr9.0_desi_photoz/individual_trees/20221021_10-fold-{}/fold-{}'.format(field, kf_index+1)
 
@@ -264,7 +266,7 @@ if __name__ == '__main__':
 
     pz_stack = []
     for kf_index in range(n_folds):
-        chunk_path = os.path.join(chunks_dir, 'lrg_magnification_pz_{}_{:g}.fits'.format(kf_index+1, magnification))
+        chunk_path = os.path.join(chunks_dir, 'extended_lrg_magnification_pz_{}_{:g}.fits'.format(kf_index+1, magnification))
         if os.stat(chunk_path).st_size!=0:
             pz_stack.append(Table(fitsio.read(chunk_path)))
     pz = vstack(pz_stack)

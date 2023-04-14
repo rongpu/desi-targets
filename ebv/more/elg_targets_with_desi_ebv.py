@@ -90,5 +90,5 @@ for field in ['south', 'north']:
     cat_stack.append(cat)
 
 cat_stack = vstack(cat_stack)
-cat_stack.write('/pscratch/sd/r/rongpu/ebv/elg_targets_desi_ebv.fits')
+cat_stack.write('/pscratch/sd/r/rongpu/ebv/elg_targets_desi_ebv.fits', overwrite=True)
 

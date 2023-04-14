@@ -104,7 +104,7 @@ def get_sample(sweep_fn):
 
     cat['EBV_SFD'] = cat['EBV'].copy()
     ##########################################################################
-    cat['EBV'] = cat['EBV_SFD'] + (3.214-2.165) * cat['delta_gr_mean'] - 0.023
+    cat['EBV'] = cat['EBV_SFD'] + 1/(3.214-2.165) * cat['delta_gr_mean'] - 0.023
     ##########################################################################
 
     elg_original, elg_gmag, elg_brighter, elg_gmag_brighter = select_elg(cat)
