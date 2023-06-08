@@ -9,20 +9,20 @@ import yaml
 include_ebv = True
 
 if include_ebv:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz.yaml'
-    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights.fits'
+    weights_path = '/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz.yaml'
+    output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_pzbins_20230509-weights.fits'
 else:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz_no_ebv.yaml'
-    output_fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_pzbins_20230120-weights_no_ebv.fits'
+    weights_path = '/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz_no_ebv.yaml'
+    output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_pzbins_20230509-weights_no_ebv.fits'
 
 time_start = time.time()
 
 # Load LRG catalog
-cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_0.49.0_pzbins_20230120.fits'))
-sweep_2 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_0.49.0_sweep_2.fits',
-                columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
-print(len(cat)==len(sweep_2))
-cat = hstack([cat, sweep_2], join_type='exact')
+cat = Table(fitsio.read('/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_pzbins_20230509.fits'))
+more_2 = Table(fitsio.read('/global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_extended_lrg_more_2.fits',
+               columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
+print(len(cat)==len(more_2))
+cat = hstack([cat, more_2], join_type='exact')
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")

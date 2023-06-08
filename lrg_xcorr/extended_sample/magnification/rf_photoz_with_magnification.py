@@ -18,6 +18,8 @@ from desitarget.targets import decode_targetid, encode_targetid
 test_run = False
 ###############
 
+ff_factor = True  # Include for the fiberflux factor
+
 n_process = 128
 
 n_folds = 10
@@ -136,7 +138,11 @@ def compute_photoz(split_idx, kf_index, magnification):
 
             noise_flux_r = np.random.randn(len(cat))
             cat1['FLUX_R_EC'] = magnification * np.array((cat['FLUX_R']+noise_flux_r/np.sqrt(cat['FLUX_IVAR_R']))/cat['MW_TRANSMISSION_R'], dtype='float32')
-            cat1['FIBERFLUX_R_EC'] = magnification * np.array((cat['FIBERFLUX_R']+cat['FIBERFLUX_R']/cat['FLUX_R']*noise_flux_r/np.sqrt(cat['FLUX_IVAR_R']))/cat['MW_TRANSMISSION_R'], dtype='float32')
+
+            if ff_factor:
+                cat1['FIBERFLUX_R_EC'] = (1 + (magnification-1) * cat['ff_factor']) * np.array((cat['FIBERFLUX_R']+cat['FIBERFLUX_R']/cat['FLUX_R']*noise_flux_r/np.sqrt(cat['FLUX_IVAR_R']))/cat['MW_TRANSMISSION_R'], dtype='float32')
+            else:
+                cat1['FIBERFLUX_R_EC'] = magnification * np.array((cat['FIBERFLUX_R']+cat['FIBERFLUX_R']/cat['FLUX_R']*noise_flux_r/np.sqrt(cat['FLUX_IVAR_R']))/cat['MW_TRANSMISSION_R'], dtype='float32')
 
             # Fill in negative fluxes
             for index in range(len(col_list)):
@@ -187,6 +193,8 @@ if __name__ == '__main__':
     chunks_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/tmp/kf_chunks/'+field
 
     cat_all = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}.fits'.format(field), columns=columns))
+    cat_all1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/magnification/extended_lrg_magnification_{}_fiberflux.fits'.format(field), columns=['ff_factor']))
+    cat_all = hstack([cat_all, cat_all1])
     cat_size = len(cat_all)
 
     np.random.seed(1456+cat_size)

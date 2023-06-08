@@ -78,8 +78,8 @@ for field in ['north', 'south']:
         mask = maps['FRACAREA']>min_pix_frac
         maps = maps[mask]
 
-        mask = maps['DEC']>-29  # Remove the southern part of DES
-        maps = maps[mask]
+        # mask = maps['DEC']>-29  # Remove the southern part of DES
+        # maps = maps[mask]
 
         # Remove pixels near the LMC
         ramin, ramax, decmin, decmax = 58, 110, -90, -56

@@ -15,16 +15,16 @@ n_processes = 128
 
 min_nobs = 2
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256]
 # nsides = [64]
 
-include_ebv = False
+include_ebv = True
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/main_lrg/linear_weights'
 
 if include_ebv:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_1.1.1_pzbins_20221204-weights.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_pzbins_20230509-weights.fits'
 else:
-    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_1.1.1_pzbins_20221204-weights_no_ebv.fits'
+    weights_path = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_pzbins_20230509-weights_no_ebv.fits'
 
 
 def get_weighted_counts(pix_idx):
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # Load LRG catalog
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_pzbins_20230509.fits'))
     cat_weights = Table(fitsio.read(weights_path))
     cat = hstack([cat, cat_weights], join_type='exact')
 

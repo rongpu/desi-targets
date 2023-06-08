@@ -9,14 +9,14 @@ min_nobs = 2
 max_ebv = 0.15
 max_stardens = 2500
 
-fn = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'
+fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_pzbins_20230509.fits'
 cat = Table(fitsio.read(fn))
 print(len(cat))
 
-# Remove area south of DEC=-29  (this was not applied Martin's paper)
-mask = cat['DEC']>-29
-print('Remove area south of DEC=-29', np.sum(mask), np.sum(~mask), np.sum(mask)/len(mask))
-cat = cat[mask]
+# # Remove area south of DEC=-29  (this was not applied Martin's paper)
+# mask = cat['DEC']>-29
+# print('Remove area south of DEC=-29', np.sum(mask), np.sum(~mask), np.sum(mask)/len(mask))
+# cat = cat[mask]
 
 # Remove "islands" in the NGC
 mask = ~((cat['DEC']<-10.5) & (cat['RA']>120) & (cat['RA']<260))

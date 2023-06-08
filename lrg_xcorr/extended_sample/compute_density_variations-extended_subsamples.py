@@ -8,7 +8,7 @@ import healpy as hp
 
 min_nobs = 2
 
-nsides = [64, 128, 256, 512]
+nsides = [64, 128, 256]
 
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/density_maps/extended_lrg'
 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     time_start = time.time()
 
     # Load LRG catalog
-    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_0.49.0_pzbins_20230120.fits'))
+    cat = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_extended_lrg_pzbins_20230509.fits'))
 
     mask = (cat['PIXEL_NOBS_G']>=min_nobs) & (cat['PIXEL_NOBS_R']>=min_nobs) & (cat['PIXEL_NOBS_Z']>=min_nobs)
     mask &= cat['lrg_mask']==0

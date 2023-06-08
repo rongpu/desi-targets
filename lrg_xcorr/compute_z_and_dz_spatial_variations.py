@@ -9,16 +9,19 @@ import fitsio
 import healpy as hp
 from multiprocessing import Pool
 
+nmad = lambda x: 1.4826 * np.median(np.abs(x-np.median(x)))
 
 plot_dir = '/global/cfs/cdirs/desi/users/rongpu/lrg_xcorr/specz_variation/'
+
+nside = 16
 
 min_nobs = 2
 # max_ebv = 0.15
 # max_stardens = 2500
 
 main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
-tmp = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204.fits'))
-tmp1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/dr9_lrg_1.1.1_pzbins_20221204-weights.fits'))
+tmp = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/original_dr9/dr9_lrg_1.1.1_pzbins_20221204.fits'))
+tmp1 = Table(fitsio.read('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/catalogs/original_dr9/more/dr9_lrg_1.1.1_pzbins_20221204-weights.fits'))
 lrg = hstack([tmp, tmp1], join_type='exact')
 
 
@@ -119,7 +122,6 @@ print('Stars', np.sum(mask_star), np.sum(~mask_star), np.sum(mask_star)/len(mask
 
 cat_all = cat.copy()
 
-nside = 32
 n_processes = 64
 npix = hp.nside2npix(nside)
 
@@ -132,7 +134,7 @@ def get_z_variation(pix_idx):
     hp_table['HPXPIXEL'] = pix_list
     hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
     bin_str = 'bin_'+str(pz_bin)+'_'
-    for col in [bin_str+'z_mean', bin_str+'z_median', bin_str+'z_l68', bin_str+'z_u68', bin_str+'z_l95', bin_str+'z_u95']:
+    for col in [bin_str+'z_mean', bin_str+'z_median', bin_str+'z_l68', bin_str+'z_u68', bin_str+'z_l95', bin_str+'z_u95', bin_str+'z_nmad']:
         hp_table[col] = np.zeros(len(hp_table), dtype=float)
     hp_table[bin_str+'n_objects'] = np.zeros(len(hp_table), dtype=int)
     for index in np.arange(len(pix_idx)):
@@ -140,6 +142,7 @@ def get_z_variation(pix_idx):
         hp_table[bin_str+'z_mean'][index] = np.mean(cat['Z'][idx])
         hp_table[bin_str+'z_median'][index], hp_table[bin_str+'z_l68'][index], hp_table[bin_str+'z_u68'][index], hp_table[bin_str+'z_l95'][index], hp_table[bin_str+'z_u95'][index] =\
             np.percentile(cat['Z'][idx], [50, 16., 84., 2.5, 97.5])
+        hp_table[bin_str+'z_nmad'][index] = nmad(cat['Z'][idx])
         hp_table[bin_str+'n_objects'][index] = len(idx)
 
     return hp_table
@@ -153,7 +156,7 @@ def get_dz_variation(pix_idx):
     hp_table['HPXPIXEL'] = pix_list
     hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_list, nest=False, lonlat=True)
     bin_str = 'bin_'+str(pz_bin)+'_'
-    for col in [bin_str+'dz_mean', bin_str+'dz_median', bin_str+'dz_l68', bin_str+'dz_u68', bin_str+'dz_l95', bin_str+'dz_u95']:
+    for col in [bin_str+'dz_mean', bin_str+'dz_median', bin_str+'dz_l68', bin_str+'dz_u68', bin_str+'dz_l95', bin_str+'dz_u95', bin_str+'dz_nmad']:
         hp_table[col] = np.zeros(len(hp_table), dtype=float)
     hp_table[bin_str+'n_objects'] = np.zeros(len(hp_table), dtype=int)
     for index in np.arange(len(pix_idx)):
@@ -161,6 +164,7 @@ def get_dz_variation(pix_idx):
         hp_table[bin_str+'dz_mean'][index] = np.mean(cat['Z'][idx]-cat['Z_PHOT_MEDIAN'][idx])
         hp_table[bin_str+'dz_median'][index], hp_table[bin_str+'dz_l68'][index], hp_table[bin_str+'dz_u68'][index], hp_table[bin_str+'dz_l95'][index], hp_table[bin_str+'dz_u95'][index] =\
             np.percentile(cat['Z'][idx]-cat['Z_PHOT_MEDIAN'][idx], [50, 16., 84., 2.5, 97.5])
+        hp_table[bin_str+'dz_nmad'][index] = nmad(cat['Z'][idx]-cat['Z_PHOT_MEDIAN'][idx])
         hp_table[bin_str+'n_objects'][index] = len(idx)
 
     return hp_table
@@ -196,7 +200,7 @@ for index, pz_bin in enumerate(range(1, 5)):
 
 hp_table = hp_table.filled(0)
 hp_table.sort('HPXPIXEL')
-hp_table.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_specz_stats_32.fits')
+hp_table.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_specz_stats_{}.fits'.format(nside))
 
 
 # dz variation
@@ -229,4 +233,4 @@ for index, pz_bin in enumerate(range(1, 5)):
 
 hp_table = hp_table.filled(0)
 hp_table.sort('HPXPIXEL')
-hp_table.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_dz_stats_32.fits')
+hp_table.write('/global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_dz_stats_{}.fits'.format(nside))
