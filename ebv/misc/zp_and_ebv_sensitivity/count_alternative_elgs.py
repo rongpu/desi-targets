@@ -13,8 +13,8 @@ from healpix_util import downsize_hp_map
 
 
 nside_in = 512
-nside_out = 64
-bad_sky_mask = True
+nside_out = 128
+bad_sky_mask = False
 
 min_nobs = 1
 maskbits = []
@@ -92,7 +92,7 @@ columns = ['HPXPIXEL', 'FRACAREA', 'n_targets', 'EBV', 'GALDEPTH_G', 'GALDEPTH_R
 n_processes = 128
 
 mask = cat['elg_original'].copy()
-output_fn = '/pscratch/sd/r/rongpu/ebv/alternative_elg_targets/density_map_alternative_elgs_original_{}.fits'.format(nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/maps/density_map_alternative_elgs_original_{}.fits'.format(nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -110,7 +110,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=True)
 
 mask = cat['elg_gmag'].copy()
-output_fn = '/pscratch/sd/r/rongpu/ebv/alternative_elg_targets/density_map_alternative_elgs_gmag_{}.fits'.format(nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/maps/density_map_alternative_elgs_gmag_{}.fits'.format(nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -128,7 +128,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=True)
 
 mask = cat['elg_brighter'].copy()
-output_fn = '/pscratch/sd/r/rongpu/ebv/alternative_elg_targets/density_map_alternative_elgs_brighter_{}.fits'.format(nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/maps/density_map_alternative_elgs_brighter_{}.fits'.format(nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -146,7 +146,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=True)
 
 mask = cat['elg_gmag_brighter'].copy()
-output_fn = '/pscratch/sd/r/rongpu/ebv/alternative_elg_targets/density_map_alternative_elgs_gmag_brighter_{}.fits'.format(nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/maps/density_map_alternative_elgs_gmag_brighter_{}.fits'.format(nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)

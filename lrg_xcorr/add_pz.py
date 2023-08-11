@@ -1,3 +1,5 @@
+# Add photo-z columns for Main and Extended LRGs
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np

@@ -46,10 +46,10 @@ def select_elg(cat):
     # rmag = 22.5 - 2.5 * np.log10((cat['FLUX_R'] / cat['MW_TRANSMISSION_R']).clip(1e-7))
     # zmag = 22.5 - 2.5 * np.log10((cat['FLUX_Z'] / cat['MW_TRANSMISSION_Z']).clip(1e-7))
     # gfibermag = 22.5 - 2.5 * np.log10((cat['FIBERFLUX_G'] / cat['MW_TRANSMISSION_G']).clip(1e-7))
-    gmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_G']*10**(0.4*3.214*cat['EBV']), 1e-7, None))
-    rmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_R']*10**(0.4*2.165*cat['EBV']), 1e-7, None))
-    zmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_Z']*10**(0.4*1.211*cat['EBV']), 1e-7, None))
-    gfibermag = 22.5 - 2.5 * np.log10(np.clip(cat['FIBERFLUX_G']*10**(0.4*3.214*cat['EBV']), 1e-7, None))
+    gmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_G']*10**(0.4*3.214*cat['EBV_DESI']), 1e-7, None))
+    rmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_R']*10**(0.4*2.165*cat['EBV_DESI']), 1e-7, None))
+    zmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_Z']*10**(0.4*1.211*cat['EBV_DESI']), 1e-7, None))
+    gfibermag = 22.5 - 2.5 * np.log10(np.clip(cat['FIBERFLUX_G']*10**(0.4*3.214*cat['EBV_DESI']), 1e-7, None))
 
     elg_original = mask_quality.copy()
     elg_original &= gmag > 20                       # bright cut.
@@ -99,13 +99,9 @@ def get_sample(sweep_fn):
     if np.sum(mask)==0:
         return None
     cat = cat[mask]
+    cat.rename_column('EBV', 'EBV_SFD')
     cat = join(cat, delta_gr_map, keys='HPXPIXEL')
     cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
-
-    cat['EBV_SFD'] = cat['EBV'].copy()
-    ##########################################################################
-    cat['EBV'] = cat['EBV_SFD'] + 1/(3.214-2.165) * cat['delta_gr_mean'] - 0.023
-    ##########################################################################
 
     elg_original, elg_gmag, elg_brighter, elg_gmag_brighter = select_elg(cat)
     cat['elg_original'] = elg_original.copy()
@@ -116,18 +112,20 @@ def get_sample(sweep_fn):
     if np.sum(mask)==0:
         return None
     cat = cat[mask]
-    cat = cat[['TARGETID', 'RA', 'DEC', 'EBV', 'EBV_SFD', 'elg_original', 'elg_gmag', 'elg_brighter', 'elg_gmag_brighter']]
+    cat = cat[['TARGETID', 'RA', 'DEC', 'EBV_DESI', 'EBV_SFD', 'n_star', 'elg_original', 'elg_gmag', 'elg_brighter', 'elg_gmag_brighter']]
 
     return cat
 
 
-nside = 64
-delta_gr_map = Table(fitsio.read('/pscratch/sd/r/rongpu/ebv/desi_std/delta_gr_sv1sv3main_nside_{}.fits'.format(nside)))
+nside = 128
+delta_gr_map = Table(fitsio.read('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/desi_std/maps/delta_gr_map_all_{}.fits'.format(nside)))
 print(len(delta_gr_map))
-mask = delta_gr_map['n_star']>=3
+mask = delta_gr_map['n_star']>=1
 delta_gr_map = delta_gr_map[mask]
 print(len(delta_gr_map))
-delta_gr_map = delta_gr_map[['HPXPIXEL', 'delta_gr_mean']]
+delta_gr_map.rename_column('EBV', 'EBV_SFD')
+delta_gr_map['EBV_DESI'] = delta_gr_map['delta_gr_hlmean']/1.049
+delta_gr_map = delta_gr_map[['HPXPIXEL', 'EBV_DESI', 'n_star']]
 
 cat_stack = []
 
@@ -167,5 +165,5 @@ for field in ['north', 'south']:
     cat_stack.append(cat)
 
 cat_stack = vstack(cat_stack)
-cat_stack.write('/pscratch/sd/r/rongpu/ebv/alternative_elg_targets/alternative_elg_targets_desi_ebv.fits', overwrite=True)
+cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/alternative_elg_targets_desi_ebv.fits.gz', overwrite=True)
 

@@ -34,10 +34,10 @@ if custom_mask_name!='':
     mask_str += '_' + custom_mask_name
 
 if include_ebv:
-    xnames_fit = ['EBV', 'psfdepth_w1mag_ebv', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
+    xnames_fit = ['EBV', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
     output_fn = 'extended_lrg_linear_coeffs_pz.yaml'
 else:
-    xnames_fit = ['psfdepth_w1mag_ebv', 'galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
+    xnames_fit = ['galdepth_gmag_ebv', 'galdepth_rmag_ebv', 'galdepth_zmag_ebv', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']
     output_fn = 'extended_lrg_linear_coeffs_pz_no_ebv.yaml'
 
 coeff_dict = {}
@@ -67,13 +67,13 @@ for field in ['north', 'south']:
             maps['galdepth_gmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_G'])))-9)
             maps['galdepth_rmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_R'])))-9)
             maps['galdepth_zmag'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_Z'])))-9)
-            maps['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9)
-            maps['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9)
+            # maps['psfdepth_w1mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9)
+            # maps['psfdepth_w2mag'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9)
             maps['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_G'])))-9) - 3.214*maps['EBV']
             maps['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_R'])))-9) - 2.165*maps['EBV']
             maps['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['GALDEPTH_Z'])))-9) - 1.211*maps['EBV']
-            maps['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9) - 0.184*maps['EBV']
-            maps['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9) - 0.113*maps['EBV']
+            # maps['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W1'])))-9) - 0.184*maps['EBV']
+            # maps['psfdepth_w2mag_ebv'] = -2.5*(np.log10((5/np.sqrt(maps['PSFDEPTH_W2'])))-9) - 0.113*maps['EBV']
 
         mask = maps['FRACAREA']>min_pix_frac
         maps = maps[mask]
