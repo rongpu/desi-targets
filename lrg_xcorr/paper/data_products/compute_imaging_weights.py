@@ -14,29 +14,29 @@ sample = 'main'
 
 if sample=='main':
     if include_ebv:
-        weights_path = 'imaging_weights/main_lrg/main_lrg_linear_coeffs_pz.yaml'
+        weights_path = 'imaging_weights/main_lrg_linear_coeffs_pz.yaml'
         output_fn = 'catalogs/more/dr9_lrg_pzbins_20230509-weights.fits'
     else:
-        weights_path = 'imaging_weights/main_lrg/main_lrg_linear_coeffs_pz_no_ebv.yaml'
+        weights_path = 'imaging_weights/main_lrg_linear_coeffs_pz_no_ebv.yaml'
         output_fn = 'catalogs/more/dr9_lrg_pzbins_20230509-weights_no_ebv.fits'
     # Load LRG catalog
     cat = Table(fitsio.read('catalogs/dr9_lrg_pzbins_20230509.fits'))
-    more_2 = Table(fitsio.read('catalogs/more/dr9_lrg_more_2.fits.gz',
-                   columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
+    more_2 = Table(fitsio.read('catalogs/more/dr9_lrg_more_2.fits',
+                   columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
     print(len(cat)==len(more_2))
     cat = hstack([cat, more_2], join_type='exact')
 
 elif sample=='extended':
     if include_ebv:
-        weights_path = 'imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz.yaml'
+        weights_path = 'imaging_weights/extended_lrg_linear_coeffs_pz.yaml'
         output_fn = 'catalogs/more/dr9_extended_lrg_pzbins_20230509-weights.fits'
     else:
-        weights_path = 'imaging_weights/extended_lrg/extended_lrg_linear_coeffs_pz_no_ebv.yaml'
+        weights_path = 'imaging_weights/extended_lrg_linear_coeffs_pz_no_ebv.yaml'
         output_fn = 'catalogs/more/dr9_extended_lrg_pzbins_20230509-weights_no_ebv.fits'
     # Load LRG catalog
     cat = Table(fitsio.read('catalogs/dr9_extended_lrg_pzbins_20230509.fits'))
-    more_2 = Table(fitsio.read('catalogs/more/dr9_extended_lrg_more_2.fits.gz',
-                   columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFDEPTH_W1', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
+    more_2 = Table(fitsio.read('catalogs/more/dr9_extended_lrg_more_2.fits',
+                   columns=['GALDEPTH_G', 'GALDEPTH_R', 'GALDEPTH_Z', 'PSFSIZE_G', 'PSFSIZE_R', 'PSFSIZE_Z']))
     print(len(cat)==len(more_2))
     cat = hstack([cat, more_2], join_type='exact')
 
@@ -46,7 +46,6 @@ with warnings.catch_warnings():
     cat['galdepth_gmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_G'])))-9) - 3.214*cat['EBV']
     cat['galdepth_rmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_R'])))-9) - 2.165*cat['EBV']
     cat['galdepth_zmag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['GALDEPTH_Z'])))-9) - 1.211*cat['EBV']
-    cat['psfdepth_w1mag_ebv'] = -2.5*(np.log10((5/np.sqrt(cat['PSFDEPTH_W1'])))-9) - 0.184*cat['EBV']
 
 cat['weight'] = 0.
 

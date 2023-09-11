@@ -1,5 +1,4 @@
 cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/catalogs/more
-
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_extended_lrg_photom.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_extended_lrg_pz_new.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_lrg_photom.fits ./
@@ -8,7 +7,6 @@ rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_correcte
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_extended_lrg_more_2.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_lrg_more_1.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/zp_offset_corrected/dr9_lrg_more_2.fits ./
-
 rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_pzbins_20230509-weights.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_extended_lrg_pzbins_20230509-weights_no_ebv.fits ./
 rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/catalogs/more/dr9_lrg_pzbins_20230509-weights.fits ./
@@ -20,17 +18,34 @@ mv ./dr9_lrg_pz_new.fits ./dr9_lrg_pz.fits
 cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/misc/
 rsync /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_specz_stats_{16,32}.fits .
 rsync /global/cfs/cdirs/desi/users/rongpu/data/lrg_xcorr/misc/lrg_pzbins_dz_stats_{16,32}.fits .
+rsync /global/cfs/cdirs/desi/users/rongpu/useful/healpix_maps/pixweight-dr7.1-0.22.0_stardens_64_ring.npy .
 
 # cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/clustering
 # rsync /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/from_martin/newdata_zp_corrected/* .
 
 cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/maps/
-rsync /pscratch/sd/m/mwhite/DESI/MaPar/maps/lrg*_msk.hpx2048.fits .
-rsync /pscratch/sd/m/mwhite/DESI/MaPar/maps/lrg*_del.hpx2048.fits .
-rsync /pscratch/sd/m/mwhite/DESI/extLRG/maps/lrg*_msk.hpx2048.fits .
-rsync /pscratch/sd/m/mwhite/DESI/extLRG/maps/lrg*_del.hpx2048.fits .
-rm *_noebv_*
+rsync /pscratch/sd/m/mwhite/DESI/MaPar/maps/lrg*_msk.hpx2048.fits main_lrg/
+rsync /pscratch/sd/m/mwhite/DESI/MaPar/maps/lrg*_del.hpx2048.fits main_lrg/
+rsync /pscratch/sd/m/mwhite/DESI/extLRG/maps/lrg*_msk.hpx2048.fits extended_lrg/
+rsync /pscratch/sd/m/mwhite/DESI/extLRG/maps/lrg*_del.hpx2048.fits extended_lrg/
+rm */*_noebv_*
+gzip */*.fits
 
 cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/dndz
-rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/dndz/iron_v0.3/* .
+rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/dndz/iron_v0.4/* .
 
+cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/imaging_weights
+rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/imaging_weights/extended_lrg/*.yaml .
+rsync /global/cfs/cdirs/desicollab/users/rongpu/data/lrg_xcorr/imaging_weights/main_lrg/*.yaml .
+
+cd /global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/catalogs/
+mv dr9_extended_lrg_pzbins_20230509.fits dr9_extended_lrg_pzbins.fits
+mv dr9_lrg_pzbins_20230509.fits dr9_lrg_pzbins.fits
+mv more/dr9_extended_lrg_pzbins_20230509-weights.fits more/dr9_extended_lrg_pzbins-weights.fits
+mv more/dr9_extended_lrg_pzbins_20230509-weights_no_ebv.fits more/dr9_extended_lrg_pzbins-weights_no_ebv.fits
+mv more/dr9_lrg_pzbins_20230509-weights.fits more/dr9_lrg_pzbins-weights.fits
+mv more/dr9_lrg_pzbins_20230509-weights_no_ebv.fits more/dr9_lrg_pzbins-weights_no_ebv.fits
+
+################################## From laptop: ################################## 
+rsync /Users/rongpu/git/desi-targets/lrg_xcorr/paper/data_products/quality_cuts.py saul:/global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/catalogs/
+rsync /Users/rongpu/git/desi-targets/lrg_xcorr/paper/data_products/compute_imaging_weights.py saul:/global/cfs/cdirs/desicollab/users/rongpu/lrg_xcorr/data_products/imaging_weights/
