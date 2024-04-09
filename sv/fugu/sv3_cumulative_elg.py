@@ -1,4 +1,4 @@
-# Create combined SV3 cumulative LRG catalog
+# Create combined SV3 cumulative ELG catalog
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -13,7 +13,7 @@ import fitsio
 
 coadd_type = 'cumulative'
 
-tiles = Table.read('/global/cfs/cdirs/desi/survey/ops/surveyops/trunk/ops/tiles-sv3.ecsv')
+tiles = Table.read('/dvs_ro/cfs/cdirs/desi/survey/ops/surveyops/trunk/ops/tiles-sv3.ecsv')
 print(len(tiles))
 mask = tiles['PROGRAM']=='DARK'
 tiles = tiles[mask]
@@ -30,7 +30,7 @@ columns_emline = ['TARGETID', 'OII_FLUX', 'OII_FLUX_IVAR', 'OIII_FLUX', 'OIII_FL
 
 tileid_list = tiles['TILEID']
 
-top_data_dir = '/global/cfs/cdirs/desi/spectro/redux'
+top_data_dir = '/dvs_ro/cfs/cdirs/desi/spectro/redux'
 data_dir = os.path.join(top_data_dir, 'fuji/tiles/{}'.format(coadd_type))
 
 cat_stack = []
@@ -63,11 +63,11 @@ for tileid in tileid_list:
         tmp = join(tmp, tmp4, keys='TARGETID')
         tmp = join(tmp, tmp5, keys='TARGETID')
 
-        mask = tmp['SV3_DESI_TARGET'] & 2**0 > 0
+        mask = tmp['SV3_DESI_TARGET'] & 2**1 > 0
         tmp = tmp[mask]
 
         if len(tmp)==0:
-            print('No LRGs: ', fn)
+            print('No ELGs: ', fn)
             continue
 
         tmp['LASTNIGHT'] = lastnight
@@ -79,31 +79,15 @@ cat = vstack(cat_stack)
 print()
 print(len(cat))
 
-############################ Add LRG mask ############################
+############################ Add main ELG flag ############################
 
-sv3_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/0.57.0'
+main_dir = '/dvs_ro/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
+elg = Table(fitsio.read(os.path.join(main_dir, 'dr9_elg_1.1.1_basic.fits'), columns=['TARGETID']))
 
-lrg = []
-for field in ['north', 'south']:
-    tmp = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_lrg_{}_0.57.0_basic.fits'.format(field)), columns=['TARGETID']))
-    tmp1 = Table(fitsio.read(os.path.join(sv3_dir, 'dr9_sv3_lrg_{}_0.57.0_lrgmask_v1.fits'.format(field))))
-    lrg.append(hstack([tmp, tmp1]))
-lrg = vstack(lrg)
-
-mask = np.in1d(lrg['TARGETID'], cat['TARGETID'])
-lrg = lrg[mask]
-
-cat = join(cat, lrg, keys='TARGETID')
-
-############################ Add main LRG flag ############################
-
-main_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/1.1.1/resolve'
-lrg = Table(fitsio.read(os.path.join(main_dir, 'dr9_lrg_1.1.1_basic.fits'), columns=['TARGETID']))
-
-mask = np.in1d(cat['TARGETID'], lrg['TARGETID'])
-cat['main_lrg'] = False
-cat['main_lrg'][mask] = True
+mask = np.in1d(cat['TARGETID'], elg['TARGETID'])
+cat['main_elg'] = False
+cat['main_elg'][mask] = True
 
 #############################################################################
 
-cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/fugu/sv3_{}_lrg.fits'.format(coadd_type), overwrite=True)
+cat.write('/global/cfs/cdirs/desi/users/rongpu/spectro/fugu/sv3_{}_elg.fits'.format(coadd_type), overwrite=True)
