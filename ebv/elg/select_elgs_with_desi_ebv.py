@@ -1,4 +1,9 @@
-# Select a gmag-limited ELG sample and a brighter ELG sample
+# Select the original ELG_LOP sample, gmag-limited ELG_LOP sample, and a brighter ELG_LOP sample with DESI E(B-V) or SFD E(B-V)
+
+# cd /global/u2/r/rongpu/git/desi-examples/bright_star_mask/
+# python read_pixel_bitmask.py --tracer elg --input /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_desi_ebv.fits.gz --output /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_desi_ebv_elgmask_v1.fits.gz
+# python read_pixel_bitmask.py --tracer elg --input /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_sfd_ebv.fits.gz --output /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_sfd_ebv_elgmask_v1.fits.gz
+
 
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
@@ -12,6 +17,10 @@ import healpy as hp
 from multiprocessing import Pool
 
 from desitarget.targets import decode_targetid, encode_targetid
+
+
+# Also produce the SFD version for comparison
+use_desi_ebv = False
 
 
 def select_elg(cat):
@@ -46,10 +55,10 @@ def select_elg(cat):
     # rmag = 22.5 - 2.5 * np.log10((cat['FLUX_R'] / cat['MW_TRANSMISSION_R']).clip(1e-7))
     # zmag = 22.5 - 2.5 * np.log10((cat['FLUX_Z'] / cat['MW_TRANSMISSION_Z']).clip(1e-7))
     # gfibermag = 22.5 - 2.5 * np.log10((cat['FIBERFLUX_G'] / cat['MW_TRANSMISSION_G']).clip(1e-7))
-    gmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_G']*10**(0.4*3.214*cat['EBV_DESI']), 1e-7, None))
-    rmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_R']*10**(0.4*2.165*cat['EBV_DESI']), 1e-7, None))
-    zmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_Z']*10**(0.4*1.211*cat['EBV_DESI']), 1e-7, None))
-    gfibermag = 22.5 - 2.5 * np.log10(np.clip(cat['FIBERFLUX_G']*10**(0.4*3.214*cat['EBV_DESI']), 1e-7, None))
+    gmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_G']*10**(0.4*3.214*cat['EBV']), 1e-7, None))
+    rmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_R']*10**(0.4*2.165*cat['EBV']), 1e-7, None))
+    zmag = 22.5 - 2.5 * np.log10(np.clip(cat['FLUX_Z']*10**(0.4*1.211*cat['EBV']), 1e-7, None))
+    gfibermag = 22.5 - 2.5 * np.log10(np.clip(cat['FIBERFLUX_G']*10**(0.4*3.214*cat['EBV']), 1e-7, None))
 
     elg_original = mask_quality.copy()
     elg_original &= gmag > 20                       # bright cut.
@@ -101,6 +110,12 @@ def get_sample(sweep_fn):
     cat = cat[mask]
     cat.rename_column('EBV', 'EBV_SFD')
     cat = join(cat, delta_gr_map, keys='HPXPIXEL')
+
+    if use_desi_ebv:
+        cat['EBV'] = cat['EBV_DESI']
+    else:
+        cat['EBV'] = cat['EBV_SFD']
+
     cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
 
     elg_original, elg_gmag, elg_brighter, elg_gmag_brighter = select_elg(cat)
@@ -118,20 +133,19 @@ def get_sample(sweep_fn):
 
 
 nside = 128
-delta_gr_map = Table(fitsio.read('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/desi_std/maps/delta_gr_map_all_{}.fits'.format(nside)))
+delta_gr_map = Table(fitsio.read('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/desi_stars/maps/dgr_map_combined_{}.fits'.format(nside)))
 print(len(delta_gr_map))
 mask = delta_gr_map['n_star']>=1
 delta_gr_map = delta_gr_map[mask]
 print(len(delta_gr_map))
-delta_gr_map.rename_column('EBV', 'EBV_SFD')
-delta_gr_map['EBV_DESI'] = delta_gr_map['delta_gr_hlmean']/1.049
+delta_gr_map['EBV_DESI'] = delta_gr_map['delta_gr_wmean']/1.049
 delta_gr_map = delta_gr_map[['HPXPIXEL', 'EBV_DESI', 'n_star']]
 
 cat_stack = []
 
 for field in ['north', 'south']:
 
-    sweep_dir = '/global/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
+    sweep_dir = '/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
 
     sweep_all_path = sorted(glob.glob(os.path.join(sweep_dir, '*.fits')))
     sweep_fn_list = [os.path.basename(sweep_all_path[ii]) for ii in range(len(sweep_all_path))]
@@ -145,7 +159,7 @@ for field in ['north', 'south']:
     # start multiple worker processes
     n_processess = 128
     with Pool(processes=n_processess) as pool:
-        res = pool.map(get_sample, sweep_fn_list)
+        res = pool.map(get_sample, sweep_fn_list, chunksize=1)
 
     # Remove None elements from the list
     for index in range(len(res)-1, -1, -1):
@@ -165,5 +179,9 @@ for field in ['north', 'south']:
     cat_stack.append(cat)
 
 cat_stack = vstack(cat_stack)
-cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/v0/targets/alternative_elg_targets_desi_ebv.fits.gz', overwrite=True)
+if use_desi_ebv:
+    fn = 'elg_targets_desi_ebv.fits.gz'
+else:
+    fn = 'elg_targets_sfd_ebv.fits.gz'
+cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/'+fn, overwrite=False)
 

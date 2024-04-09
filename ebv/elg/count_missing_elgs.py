@@ -1,3 +1,5 @@
+# Count the number of ELG_LOP targets selected with the DESI EBV map but not with the SFD EBV map
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -15,7 +17,6 @@ from healpix_util import downsize_hp_map
 nside_in = 512
 nside_out = 128
 bad_sky_mask = False
-use_desi_ebv = False
 
 min_nobs = 1
 maskbits = []
@@ -23,17 +24,27 @@ custom_mask_name = 'elgmask_v1'
 mask_str = ''.join([str(tmp) for tmp in maskbits])
 if custom_mask_name!='':
     mask_str += '_' + custom_mask_name
-if use_desi_ebv:
-    ebv_str = 'desi_ebv'
-else:
-    ebv_str = 'sfd_ebv'
 
-fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_{}.fits.gz'.format(ebv_str)
-elgmask_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_{}_elgmask_v1.fits.gz'.format(ebv_str)
-cat = Table(fitsio.read(fn))
-elgmask = Table(fitsio.read(elgmask_fn))
-cat = hstack([cat, elgmask], join_type='exact')
-mask = cat['elg_mask']==0
+
+for ebv_str in ['desi_ebv', 'sfd_ebv']:
+
+    fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_{}.fits.gz'.format(ebv_str)
+    elgmask_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_{}_elgmask_v1.fits.gz'.format(ebv_str)
+    cat = Table(fitsio.read(fn))
+    elgmask = Table(fitsio.read(elgmask_fn))
+    cat = hstack([cat, elgmask], join_type='exact')
+    mask = cat['elg_mask']==0
+    cat = cat[mask]
+
+    if ebv_str=='desi_ebv':
+        cat_desi = cat.copy()
+    else:
+        cat_sfd = cat.copy()
+
+cat = cat_desi.copy()
+
+# Select DESI-based ELGs that are NOT in the SFD-based ELGs
+mask = ~np.in1d(cat['TARGETID'], cat_sfd['TARGETID'])
 cat = cat[mask]
 
 ######################################################################
@@ -97,7 +108,7 @@ columns = ['HPXPIXEL', 'FRACAREA', 'n_targets', 'EBV', 'GALDEPTH_G', 'GALDEPTH_R
 n_processes = 128
 
 mask = cat['elg_original'].copy()
-output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_elgs_{}_original_{}.fits'.format(ebv_str, nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_{}_original_{}.fits'.format('missing_elgs', nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -115,7 +126,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=False)
 
 mask = cat['elg_gmag'].copy()
-output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_elgs_{}_gmag_{}.fits'.format(ebv_str, nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_{}_gmag_{}.fits'.format('missing_elgs', nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -133,7 +144,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=False)
 
 mask = cat['elg_brighter'].copy()
-output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_elgs_{}_brighter_{}.fits'.format(ebv_str, nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_{}_brighter_{}.fits'.format('missing_elgs', nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
@@ -151,7 +162,7 @@ hp_table['FRACAREA'] = hp_table['FRACAREA_IN']*pix_area_in/pix_area_out
 hp_table.write(output_fn, overwrite=False)
 
 mask = cat['elg_gmag_brighter'].copy()
-output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_elgs_{}_gmag_brighter_{}.fits'.format(ebv_str, nside_out)
+output_fn = '/global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/density_map_alternative_{}_gmag_brighter_{}.fits'.format('missing_elgs', nside_out)
 if bad_sky_mask:
     output_fn = output_fn.replace('.fits', '_badskymask.fits')
 pix_allobj = hp.pixelfunc.ang2pix(nside_in, cat['RA'][mask], cat['DEC'][mask], lonlat=True)
