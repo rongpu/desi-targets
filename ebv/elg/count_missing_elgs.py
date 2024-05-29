@@ -117,7 +117,7 @@ hp_table = Table()
 hp_table['HPXPIXEL'] = pix_unique
 # hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_unique, nest=False, lonlat=True)
 hp_table['n_targets'] = pix_count
-hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='inner').filled(0)
+hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='left').filled(0)
 hp_table = downsize_hp_map(nside_in, nside_out, hp_table[columns], stats_dict=stats_dict, weights=hp_table['FRACAREA'], n_processes=n_processes)
 hp_table.rename_column('FRACAREA', 'FRACAREA_IN')
 pix_area_in = hp.pixelfunc.nside2pixarea(nside_in, degrees=True)
@@ -135,7 +135,7 @@ hp_table = Table()
 hp_table['HPXPIXEL'] = pix_unique
 # hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_unique, nest=False, lonlat=True)
 hp_table['n_targets'] = pix_count
-hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='inner').filled(0)
+hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='left').filled(0)
 hp_table = downsize_hp_map(nside_in, nside_out, hp_table[columns], stats_dict=stats_dict, weights=hp_table['FRACAREA'], n_processes=n_processes)
 hp_table.rename_column('FRACAREA', 'FRACAREA_IN')
 pix_area_in = hp.pixelfunc.nside2pixarea(nside_in, degrees=True)
@@ -153,7 +153,7 @@ hp_table = Table()
 hp_table['HPXPIXEL'] = pix_unique
 # hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_unique, nest=False, lonlat=True)
 hp_table['n_targets'] = pix_count
-hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='inner').filled(0)
+hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='left').filled(0)
 hp_table = downsize_hp_map(nside_in, nside_out, hp_table[columns], stats_dict=stats_dict, weights=hp_table['FRACAREA'], n_processes=n_processes)
 hp_table.rename_column('FRACAREA', 'FRACAREA_IN')
 pix_area_in = hp.pixelfunc.nside2pixarea(nside_in, degrees=True)
@@ -171,7 +171,7 @@ hp_table = Table()
 hp_table['HPXPIXEL'] = pix_unique
 # hp_table['RA'], hp_table['DEC'] = hp.pixelfunc.pix2ang(nside, pix_unique, nest=False, lonlat=True)
 hp_table['n_targets'] = pix_count
-hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='inner').filled(0)
+hp_table = join(maps, hp_table, keys='HPXPIXEL', join_type='left').filled(0)
 hp_table = downsize_hp_map(nside_in, nside_out, hp_table[columns], stats_dict=stats_dict, weights=hp_table['FRACAREA'], n_processes=n_processes)
 hp_table.rename_column('FRACAREA', 'FRACAREA_IN')
 pix_area_in = hp.pixelfunc.nside2pixarea(nside_in, degrees=True)

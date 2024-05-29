@@ -1,3 +1,5 @@
+# source /global/common/software/desi/desi_environment.sh 22.2
+
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
@@ -114,16 +116,15 @@ plot_path = os.path.join(plot_dir, 'ELG_LOP_SFD_minus_ELG_LOP_DESI_{}.png'.forma
 plot_map(nside, maps1['density']-maps2['density'], pix=maps1['HPXPIXEL'], vmin=-1000, vmax=1000,
          title='ELG_LOP_SFD - ELG_LOP_DESI', save_path=plot_path, show=False, cmap='bwr')
 
-
-# Plot "Fraction of DESI footprint" vs density of missing ELGs
-density_list = np.arange(1000)
-fraction_list = np.zeros(len(density_list))
-for index, density in enumerate(density_list):
-    mask = maps1['density']-maps2['density']<-density
-    fraction_list[index] = np.sum(mask)/len(mask)
-plt.figure(figsize=(8, 6))
-plt.plot(density_list, fraction_list)
-plt.xlabel('density of "missing ELGs"(1/sq.deg.)')
-plt.ylabel('Fraction of DESI footprint')
-plt.grid(alpha=0.5)
+# # Plot "Fraction of DESI footprint" vs density of missing ELGs
+# density_list = np.arange(1000)
+# fraction_list = np.zeros(len(density_list))
+# for index, density in enumerate(density_list):
+#     mask = maps1['density']-maps2['density']<-density
+#     fraction_list[index] = np.sum(mask)/len(mask)
+# plt.figure(figsize=(8, 6))
+# plt.plot(density_list, fraction_list)
+# plt.xlabel('density of "missing ELGs"(1/sq.deg.)')
+# plt.ylabel('Fraction of DESI footprint')
+# plt.grid(alpha=0.5)
 
