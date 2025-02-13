@@ -74,6 +74,75 @@ def select_extended_lrg_option_1(cat):
     return mask_lrg
 
 
+def select_extended_lrg_option_2(cat):
+
+    mask_quality = np.full(len(cat), True)
+
+    mask_quality &= (cat['FLUX_IVAR_R'] > 0) & (cat['FLUX_R'] > 0)   # ADM quality in r.
+    mask_quality &= (cat['FLUX_IVAR_Z'] > 0) & (cat['FLUX_Z'] > 0) & (cat['FIBERFLUX_Z'] > 0)   # ADM quality in z.
+    mask_quality &= (cat['FLUX_IVAR_W1'] > 0) & (cat['FLUX_W1'] > 0)  # ADM quality in W1.
+
+    mask_quality &= (cat['GAIA_PHOT_G_MEAN_MAG'] == 0) | (cat['GAIA_PHOT_G_MEAN_MAG'] > 18)  # remove bright GAIA sources
+
+    # ADM remove stars with zfibertot < 17.5 that are missing from GAIA.
+    mask_quality &= cat['FIBERTOTFLUX_Z'] < 10**(-0.4*(17.5-22.5))
+
+    # ADM observed in every band.
+    mask_quality &= (cat['NOBS_G'] > 0) & (cat['NOBS_R'] > 0) & (cat['NOBS_Z'] > 0)
+
+    # Apply masks
+    maskbits = [1, 12, 13]
+    mask_clean = np.ones(len(cat), dtype=bool)
+    for bit in maskbits:
+        mask_clean &= (cat['MASKBITS'] & 2**bit)==0
+    # print(np.sum(~mask_clean)/len(mask_clean))
+    mask_quality &= mask_clean
+
+    gmag = 22.5 - 2.5*np.log10(np.clip(cat['FLUX_G']*10**(0.4*3.214*cat['EBV']), 1e-7, None))
+    rmag = 22.5 - 2.5*np.log10(np.clip(cat['FLUX_R']*10**(0.4*2.165*cat['EBV']), 1e-7, None))
+    zmag = 22.5 - 2.5*np.log10(np.clip(cat['FLUX_Z']*10**(0.4*1.211*cat['EBV']), 1e-7, None))
+    w1mag = 22.5 - 2.5*np.log10(np.clip(cat['FLUX_W1']*10**(0.4*0.184*cat['EBV']), 1e-7, None))
+    zfibermag = 22.5 - 2.5*np.log10(np.clip(cat['FIBERFLUX_Z']*10**(0.4*1.211*cat['EBV']), 1e-7, None))
+
+    gr = gmag - rmag
+    rz = rmag - zmag
+    zw1 = zmag - w1mag
+    rw1 = rmag - w1mag
+
+    mask1 = mask_quality.copy()
+    mask2 = mask_quality.copy()
+
+    if field=='south':
+        mask1 &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
+        mask1 &= zfibermag < 21.6                   # faint limit
+        mask1 &= (gmag - w1mag > 2.9) | (rmag - w1mag > 1.8)  # low-z cuts
+        mask1 &= (
+            ((rmag - w1mag > ((w1mag - 0.19) - 17.14) * 1.8)
+             & (rmag - w1mag > ((w1mag - 0.19) - 16.33) * 1.))
+            | (rmag - w1mag > 3.3 - 0.1)
+        )  # double sliding cuts and high-z extension
+    else:
+        mask1 &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
+        mask1 &= zfibermag < 21.61                   # faint limit
+        mask1 &= (gmag - w1mag > 2.97) | (rmag - w1mag > 1.8)  # low-z cuts
+        mask1 &= (
+            ((rmag - w1mag > ((w1mag - 0.19) - 17.13) * 1.83)
+             & (rmag - w1mag > ((w1mag - 0.19) - 16.31) * 1.))
+            | (rmag - w1mag > 3.4 - 0.1)
+        )  # double sliding cuts and high-z extension
+
+    mask2 &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
+    if field=='south':
+        mask2 &= zfibermag < 21.6                  # faint limit
+    else:
+        mask2 &= zfibermag < 21.61                   # faint limit
+    mask2 &= (((rz-(-0.1))**2 + (gr-(2.3))**2)>2**2) & (rz>0.4)
+
+    mask_lrg = mask1 | mask2
+
+    return mask_lrg
+
+
 def get_sample(sweep_fn):
 
     print(sweep_fn)
@@ -82,8 +151,13 @@ def get_sample(sweep_fn):
 
     cat = Table(fitsio.read(sweep_path, columns=columns))
     cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
-    mask = select_extended_lrg_option_1(cat)
-    cat = cat[mask]
+    option_1 = select_extended_lrg_option_1(cat)
+    option_2 = select_extended_lrg_option_2(cat)
+    cat['sel_1'] = option_1.copy()
+    cat['sel_2'] = option_2.copy()
+    extended_lrg = option_1 | option_2
+
+    cat = cat[extended_lrg]
 
     return cat
 
@@ -129,7 +203,7 @@ cat_stack = vstack(cat_stack)
 
 main = Table(fitsio.read('/dvs_ro/cfs/cdirs/desicollab/users/rongpu/targets/dr9.0/1.1.1/resolve/dr9_lrg_1.1.1_basic.fits', columns=['TARGETID']))
 print(len(main))
-cat_stack['main_lrg'] = np.in1d(cat_stack['TARGETID'], main['TARGETID'])
+cat_stack['sel_main'] = np.in1d(cat_stack['TARGETID'], main['TARGETID'])
 
-cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets.fits', overwrite=True)
+cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/lrg_test/desi_ext_lrg_targets.fits', overwrite=True)
 
