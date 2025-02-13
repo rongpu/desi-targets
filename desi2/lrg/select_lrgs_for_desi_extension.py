@@ -61,6 +61,11 @@ def select_extended_lrg_option_1(cat):
              & (rmag - w1mag > ((w1mag - 0.275) - 16.33) * 1.))
             | (rmag - w1mag > 3.3 - 0.1)
         )  # double sliding cuts and high-z extension
+        mask_lrg &= ~(
+            ((rmag - w1mag > (w1mag - 17.14) * 1.8)
+             & (rmag - w1mag > (w1mag - 16.33) * 1.))
+            | (rmag - w1mag > 3.3)
+        )  # exclude DESI-1 LRGs
     else:
         mask_lrg &= zmag - w1mag > 0.8 * (rmag - zmag) - 0.6  # non-stellar cut
         mask_lrg &= zfibermag < 21.61                   # faint limit
@@ -70,6 +75,11 @@ def select_extended_lrg_option_1(cat):
              & (rmag - w1mag > ((w1mag - 0.275) - 16.31) * 1.))
             | (rmag - w1mag > 3.4 - 0.1)
         )  # double sliding cuts and high-z extension
+        mask_lrg &= ~(
+            ((rmag - w1mag > (w1mag - 17.13) * 1.83)
+             & (rmag - w1mag > (w1mag - 16.31) * 1.))
+            | (rmag - w1mag > 3.4)
+        )  # exclude DESI-1 LRGs
 
     return mask_lrg
 
@@ -131,5 +141,5 @@ main = Table(fitsio.read('/dvs_ro/cfs/cdirs/desicollab/users/rongpu/targets/dr9.
 print(len(main))
 cat_stack['main_lrg'] = np.in1d(cat_stack['TARGETID'], main['TARGETID'])
 
-cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets.fits', overwrite=True)
+cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only.fits')
 
