@@ -1,10 +1,5 @@
 # Select the original ELG_LOP sample, gmag-limited ELG_LOP sample, and a brighter ELG_LOP sample with DESI E(B-V) or SFD E(B-V)
 
-# cd /global/u2/r/rongpu/git/desi-examples/bright_star_mask/
-# python read_pixel_bitmask.py --tracer elg --input /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_desi_ebv.fits.gz --output /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_desi_ebv_elgmask_v1.fits.gz
-# python read_pixel_bitmask.py --tracer elg --input /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_sfd_ebv.fits.gz --output /global/cfs/cdirs/desicollab/users/rongpu/data/ebv/misc/desi_targets_with_desi_ebv/elg_targets_sfd_ebv_elgmask_v1.fits.gz
-
-
 from __future__ import division, print_function
 import sys, os, glob, time, warnings, gc
 import numpy as np
