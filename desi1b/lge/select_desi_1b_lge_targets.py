@@ -1,10 +1,9 @@
-# Select a possible LRG sample for DESI-ext
+# Select LGE sample for DESI-ext
 # srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python select_lrgs_for_desi_extension.py
 
 # To get LRG mask:
 # cd /global/u2/r/rongpu/git/desi-examples/bright_star_mask
-# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets_lrgmask_v1.1.fits.gz
-# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only_lrgmask_v1.1.fits.gz
+# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_1b_lge_targets.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_1b_lge_targets_lrgmask_v1.1.fits.gz
 
 
 from __future__ import division, print_function
@@ -142,5 +141,5 @@ main = Table(fitsio.read('/dvs_ro/cfs/cdirs/desicollab/users/rongpu/targets/dr9.
 print(len(main))
 cat_stack['main_lrg'] = np.in1d(cat_stack['TARGETID'], main['TARGETID'])
 
-cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only.fits')
+cat_stack.write('/global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_1b_lge_targets.fits')
 
