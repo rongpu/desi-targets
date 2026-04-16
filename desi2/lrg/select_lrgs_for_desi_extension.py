@@ -3,7 +3,8 @@
 
 # To get LRG mask:
 # cd /global/u2/r/rongpu/git/desi-examples/bright_star_mask
-# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/lrg_test/desi_ext_lrg_targets.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/lrg_test/desi_ext_lrg_targets_lrgmask_v1.1.fits.gz
+# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets_lrgmask_v1.1.fits.gz
+# srun -N 1 -C cpu -c 256 -t 04:00:00 -q interactive python read_pixel_bitmask.py --tracer lrg --input /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only.fits --output /global/cfs/cdirs/desicollab/users/rongpu/data/desi-ext/desi_ext_lrg_targets-ext_lrgs_only_lrgmask_v1.1.fits.gz
 
 
 from __future__ import division, print_function
