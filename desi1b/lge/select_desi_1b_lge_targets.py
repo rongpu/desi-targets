@@ -20,7 +20,7 @@ from multiprocessing import Pool
 from desitarget.targets import decode_targetid, encode_targetid
 
 
-def select_extended_lrg_option_1(cat):
+def select_lge_targets(cat):
 
     mask_quality = np.full(len(cat), True)
 
@@ -92,7 +92,7 @@ def get_sample(sweep_fn):
 
     cat = Table(fitsio.read(sweep_path, columns=columns))
     cat['TARGETID'] = encode_targetid(cat['OBJID'], cat['BRICKID'], cat['RELEASE'])
-    mask = select_extended_lrg_option_1(cat)
+    mask = select_lge_targets(cat)
     cat = cat[mask]
 
     return cat
