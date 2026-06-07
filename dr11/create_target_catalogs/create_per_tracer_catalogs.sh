@@ -1,0 +1,5 @@
+python create_per_tracer_catalogs.py LRG
+python create_per_tracer_catalogs.py LGE
+python create_per_tracer_catalogs.py ELG
+python create_per_tracer_catalogs.py QSO
+python create_per_tracer_catalogs.py BGS_ANY
