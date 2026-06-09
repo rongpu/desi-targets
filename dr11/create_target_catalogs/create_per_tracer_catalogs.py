@@ -10,7 +10,7 @@ import fitsio
 
 from multiprocessing import Pool
 
-target_dir = '/global/cfs/cdirs/desi/target/catalogs/dr11/5.1.0/targets/main/resolve'
+target_dir = '/dvs_ro/cfs/cdirs/desi/target/catalogs/dr11/5.1.0/targets/main/resolve'
 output_dir = '/global/cfs/cdirs/desi/users/rongpu/targets/dr11.0/5.1.0/resolve'
 
 basic_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS', 'TARGETID', 'DESI_TARGET', 'BGS_TARGET']
