@@ -15,7 +15,7 @@ field = str(sys.argv[1])
 field = field.lower()
 n_processes = 32
 
-sweep_dir = '/global/project/projectdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
+sweep_dir = '/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
 output_path = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/unofficial/sv3_lrg_{}.fits'.format(field)
 
 sweep_all_path = sorted(glob.glob(os.path.join(sweep_dir, '*.fits')))

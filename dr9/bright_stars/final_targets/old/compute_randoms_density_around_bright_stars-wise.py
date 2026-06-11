@@ -45,7 +45,7 @@ def get_density(d_ra, d_dec, d2d, plot_radius, nbins=101, min_count=None):
 randoms_dir = '/global/cfs/cdirs/desi/target/catalogs/dr9/0.49.0/randoms/resolve'
 n_randoms_catalogs = 4
 
-wise_path = '/global/project/projectdirs/desi/users/rongpu/useful/w1_bright-13.3_trim.fits'
+wise_path = '/dvs_ro/cfs/cdirs/desi/users/rongpu/useful/w1_bright-13.3_trim.fits'
 
 randoms_columns = ['RA', 'DEC', 'NOBS_G', 'NOBS_R', 'NOBS_Z', 'MASKBITS', 'PHOTSYS']
 

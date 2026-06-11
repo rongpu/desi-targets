@@ -15,10 +15,10 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 
-# gaia_dir = '/project/projectdirs/cosmo/data/gaia/dr2/healpix'
+# gaia_dir = '/dvs_ro/cfs/cdirs/cosmo/data/gaia/dr2/healpix'
 # output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18_dr9.fits'
 
-gaia_dir = '/project/projectdirs/cosmo/data/gaia/edr3/healpix'
+gaia_dir = '/dvs_ro/cfs/cdirs/cosmo/data/gaia/edr3/healpix'
 output_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/gaia_edr3_g_18_dr9.fits'
 
 search_radius = 1.5 * 3600.

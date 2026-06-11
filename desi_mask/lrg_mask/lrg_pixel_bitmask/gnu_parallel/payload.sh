@@ -1,7 +1,7 @@
 #!/bin/bash
 
 module load parallel
-source /project/projectdirs/desi/software/desi_environment.sh 20.7
+source /dvs_ro/cfs/cdirs/desi/software/desi_environment.sh 20.7
 
 if [[ -z "${SLURM_NODEID}" ]]; then
     echo "need \$SLURM_NODEID set"

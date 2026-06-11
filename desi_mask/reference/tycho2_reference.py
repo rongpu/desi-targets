@@ -14,7 +14,7 @@ sys.path.append(os.path.expanduser('~/git/Python/user_modules/'))
 import match_coord
 
 
-tycho2_path = '/global/project/projectdirs/cosmo/staging/tycho2/tycho2.kd.fits'
+tycho2_path = '/dvs_ro/cfs/cdirs/cosmo/staging/tycho2/tycho2.kd.fits'
 twomass_path = '/global/cfs/cdirs/desi/users/rongpu/useful/2mass_psc/2mass_psc_j_12.fits'
 
 output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/tycho2-reference.fits'

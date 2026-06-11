@@ -16,10 +16,10 @@ from astropy.coordinates import SkyCoord
 
 galactic_b_limit_pos, galactic_b_limit_neg = 14., -20.
 
-# gaia_dir = '/project/projectdirs/cosmo/data/gaia/dr2/healpix'
+# gaia_dir = '/dvs_ro/cfs/cdirs/cosmo/data/gaia/dr2/healpix'
 # output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_dr2_g_18.fits'
 
-gaia_dir = '/project/projectdirs/cosmo/data/gaia/edr3/healpix'
+gaia_dir = '/dvs_ro/cfs/cdirs/cosmo/data/gaia/edr3/healpix'
 output_path = '/global/cfs/cdirs/desi/users/rongpu/useful/gaia_edr3_g_18.fits'
 
 gaia_nside = 32

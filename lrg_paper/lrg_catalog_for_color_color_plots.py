@@ -11,8 +11,8 @@ field = 'south'
 downsample_factor = 16
 n_processess = 4
 
-sweep_dir = '/global/project/projectdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
-pz_dir = '/global/project/projectdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0-photo-z'.format(field)
+sweep_dir = '/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0'.format(field)
+pz_dir = '/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0-photo-z'.format(field)
 output_path = '/global/cfs/cdirs/desi/users/rongpu/targets/dr9.0/paper/lrg_extended_20211122_{}.fits'.format(field)
 
 # sweep_all_path = sorted(glob.glob(os.path.join(sweep_dir, '*.fits')))

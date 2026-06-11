@@ -9,8 +9,8 @@ import fitsio
 sys.path.append(os.path.expanduser('~/git/Python/user_modules/'))
 from match_coord import match_coord
 
-# south_fns = glob.glob('/global/project/projectdirs/cosmo/data/legacysurvey/dr9/south/sweep/9.0/*.fits')
-# north_fns = glob.glob('/global/project/projectdirs/cosmo/data/legacysurvey/dr9/north/sweep/9.0/*.fits')
+# south_fns = glob.glob('/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/south/sweep/9.0/*.fits')
+# north_fns = glob.glob('/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/north/sweep/9.0/*.fits')
 # south_fns = [os.path.basename(tmp) for tmp in south_fns]
 # north_fns = [os.path.basename(tmp) for tmp in north_fns]
 # print(len(south_fns), len(north_fns))
@@ -53,8 +53,8 @@ for sweep_fn in sweep_fns:
 
     print(sweep_fn)
 
-    sweep_path_north = os.path.join('/global/project/projectdirs/cosmo/data/legacysurvey/dr9/north/sweep/9.0/', sweep_fn)
-    sweep_path_south = os.path.join('/global/project/projectdirs/cosmo/data/legacysurvey/dr9/south/sweep/9.0/', sweep_fn)
+    sweep_path_north = os.path.join('/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/north/sweep/9.0/', sweep_fn)
+    sweep_path_south = os.path.join('/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/south/sweep/9.0/', sweep_fn)
 
     sweep_north = Table(fitsio.read(sweep_path_north))
     sweep_south = Table(fitsio.read(sweep_path_south))

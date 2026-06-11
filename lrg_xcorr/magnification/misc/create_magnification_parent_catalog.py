@@ -27,7 +27,7 @@ for magnification in [0.99, 1., 1.01]:
 
 targetid_all = np.unique(np.concatenate(targetid_all))
 
-sweep_fns = glob.glob('/global/project/projectdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0/*.fits'.format(field))
+sweep_fns = glob.glob('/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr9/{}/sweep/9.0/*.fits'.format(field))
 
 sweep_all = []
 

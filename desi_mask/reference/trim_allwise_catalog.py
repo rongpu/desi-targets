@@ -15,7 +15,7 @@ import healpy as hp
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-allwise_path = '/global/project/projectdirs/desi/users/rongpu/useful/w1_bright-13.3.fits'
+allwise_path = '/dvs_ro/cfs/cdirs/desi/users/rongpu/useful/w1_bright-13.3.fits'
 output_path = '/global/cfs/cdirs/desi/users/rongpu/desi_mask/w1_bright-13.3-dr9.fits'
 
 search_radius = 1.5 * 3600.

@@ -1,7 +1,7 @@
 #!/usr/bin/envpython
 
 # To run:
-# source /project/projectdirs/desi/software/desi_environment.sh master
+# source /dvs_ro/cfs/cdirs/desi/software/desi_environment.sh master
 # salloc -N 1 -C haswell -t 01:00:00 --qos interactive -L SCRATCH,project
 # python desi-per-tracer-allspec.py --tracer LRG --numproc 32
 # or for SV3: python desi-per-tracer-allspec.py --survey sv3 --tracer LRG --numproc 32
