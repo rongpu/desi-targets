@@ -17,18 +17,7 @@ if [[ -z "${SLURM_NNODES:-}" ]]; then
   exit 1
 fi
 
-if type module >/dev/null 2>&1; then
-  module load parallel
-fi
-
-if [[ -n "${DESI_ENV_VERSION:-}" ]]; then
-  source /dvs_ro/cfs/cdirs/desi/software/desi_environment.sh "$DESI_ENV_VERSION"
-fi
-
-if ! command -v parallel >/dev/null 2>&1; then
-  echo "GNU parallel is not available; load it or run module load parallel" >&2
-  exit 1
-fi
+source /dvs_ro/cfs/cdirs/desi/software/desi_environment.sh 24.11
 
 export PROCESSES=${PROCESSES:-128}
 export PYTHON=${PYTHON:-python}

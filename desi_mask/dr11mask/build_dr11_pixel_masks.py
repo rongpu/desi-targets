@@ -158,7 +158,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--processes",
         type=positive_int,
-        default=128,
+        default=32,
         help="Worker processes inside this task. Defaults to one Perlmutter CPU node.",
     )
     parser.add_argument(

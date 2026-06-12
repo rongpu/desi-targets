@@ -7,8 +7,8 @@ set -euo pipefail
 
 export RELEASE=${RELEASE:-dr11}
 export RELEASE_ROOT=${RELEASE_ROOT:-/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr11}
-export REF=${REF:-/global/cfs/cdirs/desi/users/${USER}/desi_mask/dr11_reference_stars}
-export OUT=${OUT:-/global/cfs/cdirs/desi/users/${USER}/desi_mask/dr11_pixel_masks}
+export REF=/global/cfs/cdirs/desicollab/users/rongpu/desi_mask/dr11_reference_stars
+export OUT=/global/cfs/cdirs/desicollab/users/rongpu/data/veto_masks/dr11
 
 # Four-way split for a 4-node Perlmutter CPU allocation.
 export FIELD=${FIELD:-south}
@@ -29,6 +29,7 @@ COMMON=(
   --n-task "$N_TASK"
   --task-id "$TASK_ID"
   --processes "$PROCESSES"
+  # --debug-64-bricks
 )
 CUSTOM_COMMON=("${COMMON[@]}" --fields south north)
 FIELD_COMMON=("${COMMON[@]}" --fields "$FIELD")

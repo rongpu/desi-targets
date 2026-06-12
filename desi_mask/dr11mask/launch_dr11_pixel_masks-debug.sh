@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-#SBATCH --qos=regular
+#SBATCH --qos=debug
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
 #SBATCH --constraint=cpu
-#SBATCH --time=12:00:00
+#SBATCH --time=00:30:00
 #SBATCH --account=desi
 
 set -euo pipefail

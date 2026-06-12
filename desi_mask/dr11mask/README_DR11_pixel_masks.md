@@ -58,7 +58,7 @@ across all nodes before the combine stages start. For each stage, `payload.sh`
 runs once per node, loads GNU parallel, assigns rows from `custom_tasks.txt`
 (custom stages) or `tasks.txt` (field-specific component/combine stages) by
 `SLURM_NODEID`, and calls `run_dr11_pixel_masks.sh`. Each split then uses
-Python multiprocessing with 128 local workers.
+Python multiprocessing with 32 local workers.
 
 `run_dr11_pixel_masks.sh` can still be run directly for debugging. Set
 `STAGES="lrg_gaia"` or another space-separated stage list to run selected
