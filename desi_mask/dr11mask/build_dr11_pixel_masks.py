@@ -28,11 +28,7 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.table import Table, vstack
 from scipy.interpolate import RectBivariateSpline
-
-try:
-    import multiprocessing
-except ImportError:  # pragma: no cover - multiprocessing is always available on NERSC
-    multiprocessing = None
+import multiprocessing
 
 
 RELEASE_ROOT = "/dvs_ro/cfs/cdirs/cosmo/data/legacysurvey/dr11"
