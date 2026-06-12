@@ -75,6 +75,7 @@ ELG_BITS = {
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALL_CUSTOM_MASK = REPO_ROOT / "all_tracers_custom_mask" / "desi_custom_mask_v1.txt"
 DEFAULT_ELG_CUSTOM_MASK = REPO_ROOT / "elg_mask" / "elg_custom_mask_v1.txt"
+DEBUG_BRICK_COUNT = 64
 
 _WORKER_STATE: dict[str, object] = {}
 
@@ -196,6 +197,11 @@ def parse_args() -> argparse.Namespace:
         type=positive_int,
         default=None,
         help="Optional maximum number of bricks after filtering/splitting.",
+    )
+    parser.add_argument(
+        "--debug-64-bricks",
+        action="store_true",
+        help="Debug mode: randomly select 64 total bricks before task splitting.",
     )
     parser.add_argument(
         "--clobber",
@@ -340,6 +346,20 @@ def read_bricks(args: argparse.Namespace) -> Table:
 def unique_bricks(bricks: Table) -> Table:
     _, idx = np.unique(bricks["brickid"], return_index=True)
     return bricks[np.sort(idx)]
+
+
+def select_debug_bricks(bricks: Table, args: argparse.Namespace) -> Table:
+    if not args.debug_64_bricks:
+        return bricks
+
+    sample_size = min(DEBUG_BRICK_COUNT, len(bricks))
+    if sample_size == len(bricks):
+        selected = np.arange(len(bricks))
+    else:
+        rng = np.random.default_rng(args.shuffle_seed)
+        selected = rng.permutation(len(bricks))[:sample_size]
+    print(f"Debug brick sample: {sample_size}/{len(bricks)} bricks")
+    return bricks[selected]
 
 
 def select_task_bricks(bricks: Table, args: argparse.Namespace) -> Table:
@@ -1085,6 +1105,7 @@ def main() -> None:
     stages = STAGE_ORDER if "all" in args.stages else args.stages
     print_configuration(args)
     bricks = read_bricks(args)
+    bricks = select_debug_bricks(bricks, args)
     for stage in stages:
         run_stage(stage, args, bricks)
 
