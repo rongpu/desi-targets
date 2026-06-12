@@ -26,7 +26,7 @@ python build_dr11_pixel_masks.py \
   --fields south \
   --n-task 4 \
   --task-id 0 \
-  --processes 128 \
+  --processes 32 \
   --stages lrg_gaia
 ```
 
