@@ -71,8 +71,8 @@ ELG_BITS = {
 }
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ALL_CUSTOM_MASK = REPO_ROOT / "all_tracers_custom_mask" / "desi_custom_mask_v1.txt"
-DEFAULT_ELG_CUSTOM_MASK = REPO_ROOT / "elg_mask" / "elg_custom_mask_v1.txt"
+DEFAULT_ALL_CUSTOM_MASK = "/global/cfs/cdirs/desicollab/users/rongpu/desi_mask/desi_custom_mask_v1.txt"
+DEFAULT_ELG_CUSTOM_MASK = "/global/cfs/cdirs/desicollab/users/rongpu/desi_mask/elg_custom_mask_v1.txt"
 DEBUG_BRICK_COUNT = 64
 
 _WORKER_STATE: dict[str, object] = {}
