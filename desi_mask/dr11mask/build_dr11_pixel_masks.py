@@ -15,8 +15,10 @@ Cartesian vectors and renormalizes them before doing spherical distance tests.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import os
 import time
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Iterable
 
@@ -938,6 +940,13 @@ def worker_combine(brick_index: int) -> tuple[str, str]:
     return brickname, "wrote"
 
 
+def shutdown_executor(executor, wait: bool) -> None:
+    try:
+        executor.shutdown(wait=wait, cancel_futures=not wait)
+    except TypeError:
+        executor.shutdown(wait=wait)
+
+
 def process_bricks(
     stage: str,
     args: argparse.Namespace,
@@ -946,9 +955,10 @@ def process_bricks(
     state: dict[str, object],
 ) -> None:
     selected = select_task_bricks(bricks, args)
+    processes = min(args.processes, len(selected))
     print(
         f"{stage}: task {args.task_id}/{args.n_task}; "
-        f"{len(selected)} bricks; processes={args.processes}"
+        f"{len(selected)} bricks; processes={processes}"
     )
     state = dict(state)
     state.update({"stage": stage, "args": args, "bricks": selected})
@@ -967,16 +977,60 @@ def process_bricks(
         print(f"{stage}: no bricks selected")
         return
 
-    if args.processes == 1:
+    if processes == 1:
         init_worker(state)
         for index in range(len(selected)):
             store(worker(index))
     else:
         if multiprocessing is None:
             raise RuntimeError("multiprocessing is unavailable")
-        with multiprocessing.Pool(args.processes, initializer=init_worker, initargs=(state,)) as pool:
-            for result in pool.imap_unordered(worker, range(len(selected)), chunksize=1):
-                store(result)
+        executor = concurrent.futures.ProcessPoolExecutor(
+            max_workers=processes,
+            initializer=init_worker,
+            initargs=(state,),
+        )
+        try:
+            next_index = 0
+            futures = {}
+
+            def submit_next() -> None:
+                nonlocal next_index
+                if next_index < len(selected):
+                    futures[executor.submit(worker, next_index)] = next_index
+                    next_index += 1
+
+            max_pending = min(len(selected), processes * 2)
+            for _ in range(max_pending):
+                submit_next()
+
+            while futures:
+                done, _ = concurrent.futures.wait(
+                    futures, return_when=concurrent.futures.FIRST_COMPLETED
+                )
+                for future in done:
+                    index = futures.pop(future)
+                    try:
+                        store(future.result())
+                    except BrokenProcessPool:
+                        raise
+                    except Exception as exc:
+                        brickname = str(selected[index]["brickname"])
+                        raise RuntimeError(
+                            f"{stage}: worker failed while processing brick {brickname}"
+                        ) from exc
+                    submit_next()
+        except BrokenProcessPool as exc:
+            shutdown_executor(executor, wait=False)
+            raise RuntimeError(
+                f"{stage}: a worker process exited abruptly while processing "
+                f"{len(selected)} bricks. This often means the OS killed a worker "
+                "for OOM; reduce --processes."
+            ) from exc
+        except Exception:
+            shutdown_executor(executor, wait=False)
+            raise
+        else:
+            shutdown_executor(executor, wait=True)
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - time_start))
     print(f"{stage} Done! {elapsed} {counts}")
