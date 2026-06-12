@@ -1,0 +1,4 @@
+all 4 0
+all 4 1
+all 4 2
+all 4 3
